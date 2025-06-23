@@ -1,0 +1,21 @@
+@HOST=http://localhost:4050/api
+
+@TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoSWQiOiI1MzczZThhMC00ZmU0LTQ4OGMtOWFkZi1jMjE3ODRhNTFhMTIiLCJ1aWQiOm51bGwsImlhdCI6MTc0NTk0MTQ2OCwiZXhwIjoxNzQ1OTYzMDY4fQ.83zUbQLS7Druy91sy1UN1_wRRpHHf4L2u4jqBjEiOz4
+
+@API_KEY = cfrw9D3kOE9RT6yG
+
+# Administrador
+@roleId=51b81465-e6a2-4167-a053-4a8b35f2834a
+
+# # # # ==================  Proceso de registro ==========================
+
+### 🔐 Consulta de generos
+GET {{HOST}}/utils/genders
+x-api-key: {{API_KEY}}
+Content-Type: application/json
+
+
+### 🔐 Consulta de generos
+GET {{HOST}}/utils/countries?includeStates=true&search=VEN
+x-api-key: {{API_KEY}}
+Content-Type: application/json

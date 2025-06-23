@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Api Back getName</title>
+  </head>
+  <body>
+    <h1>Api Back getName En línea</h1>
+    <p id="name"></p>
+
+    <script>
+      // Llama a tu API para obtener el nombre y mostrarlo en el HTML
+      fetch("/api/get-name")
+        .then((res) => res.json())
+        .then((data) => {
+          document.getElementById("name").textContent = `Nombre: ${data.name}`;
+        });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,54 @@
+@HOST=http://localhost:4050/api
+
+# Superadmin
+@TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiIxZGFlYzY2Mi0zMDVjLTRjYTQtYmMxOC04MzgzOTY4MGJhNmYiLCJpYXQiOjE3NDU1NTMwNTUsImV4cCI6MTc0NTU3MTA1NX0.Furl13P3GxkOGY0b5F-1o4uOdmy9Z6siPIouOMWoulE
+
+@userId=ID_DEL_USUARIO_AUTENTICADO
+
+@targetId=ID_DEL_USUARIO_A_MODIFICAR
+
+# Administrador
+@roleId=51b81465-e6a2-4167-a053-4a8b35f2834a
+
+### 🔐 Crear Usuario (Requiere SUPERADMIN o ADMIN según el rol que se crea)
+POST {{HOST}}/users/admin
+Authorization: Bearer {{TOKEN}}
+Content-Type: application/json
+
+{
+  "name": "Jesús",
+  "surname": "Yepes",
+  "phoneNumber": "04140001122",
+  "username": "jyepes",
+  "email": "jyepes@vilo.team",
+  "password": "test123.",
+  "roleId": "{{roleId}}"
+}
+
+### 📥 Obtener Todos los Usuarios
+GET {{HOST}}/users/admin
+Authorization: Bearer {{TOKEN}}
+
+### 🔍 Obtener Usuario por ID
+GET {{HOST}}/users/{{targetId}}
+Authorization: Bearer {{TOKEN}}
+
+### 🔁 Actualizar Usuario (PATCH - con lógica por rol)
+PATCH {{HOST}}/users/{{targetId}}
+Authorization: Bearer {{TOKEN}}
+Content-Type: application/json
+
+{
+  "name": "Nombre Modificado",
+  "surname": "Apellido Modificado"
+}
+
+### 🔁 Intentar cambiar usuario con conflicto de permisos
+# Cambia el role del target y tu token para probar lógica de acceso (403 si no se puede)
+PATCH {{HOST}}/users/{{targetId}}
+Authorization: Bearer {{TOKEN}}
+Content-Type: application/json
+
+{
+  "username": "no_deberia_cambiar"
+}

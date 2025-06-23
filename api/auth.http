@@ -1,0 +1,28 @@
+@HOST = http://localhost:4050/api
+@API_KEY = cfrw9D3kOE9RT6yG
+
+@TOKEN =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJkNWFjZTNlOS1lYWI4LTRhMjQtOTJiNC0yMzk4YTdmZTYyYTIiLCJidXNpbmVzc0lkIjoiZmY2NzY2NDctMjJjMi00NDBiLTk4NTgtZDA4MDUzZjQ5ODRmIiwicm9sZUNvZGUiOiJtYXN0ZXIiLCJpYXQiOjE3NDQwMzExODgsImV4cCI6MTc0NDA1Mjc4OH0.xp8o195bsi2DdpkuMcsNv3ceneZd5RbvKl8pq0Zvz24
+
+### sign in
+POST {{HOST}}/auth/sign-in
+Content-Type: application/json
+x-api-key: {{API_KEY}}
+
+{
+  "username": "super@vilo.team",
+  "password": "Vilo123456."
+}
+
+### Refresh token
+POST {{HOST}}/auth/refresh
+Content-Type: application/json
+x-api-key: {{API_KEY}}
+
+{
+   "email": "jyepes@vilo.team"
+}
+
+
+# client Login
+
+

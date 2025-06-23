@@ -1,0 +1,127 @@
+@HOST=http://localhost:4050/api
+
+@TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoSWQiOiI1MzczZThhMC00ZmU0LTQ4OGMtOWFkZi1jMjE3ODRhNTFhMTIiLCJpYXQiOjE3NDY1Njc5MzYsImV4cCI6MTc0NjU4NTkzNn0.2uuBOcBy9mRwzOuZ9T9kPlDYGhkz6oRdIHPsa2l7wzg
+
+@API_KEY = cfrw9D3kOE9RT6yG
+
+@userId=ID_DEL_USUARIO_AUTENTICADO
+
+@targetId=ID_DEL_USUARIO_A_MODIFICAR
+
+# Masculino
+@gender_id=fc6bfcb3-41da-4a06-9d8d-e5b00e1aabf2
+
+@country_id=57330fd9-fd79-4d4f-ac19-279d406bc864
+
+@state_id=5b349b92-8e60-489b-b12a-0ebc3fd8291a
+
+# Administrador
+@roleId=51b81465-e6a2-4167-a053-4a8b35f2834a
+
+# # # # ==================  Proceso de registro ==========================
+
+### 🔐 1. Registro de contrasena del cliente
+POST {{HOST}}/client
+x-api-key: {{API_KEY}}
+Content-Type: application/json
+
+{
+  "email": "jyepes@vilo.team"
+}
+
+
+### 🔐 2. Verificar correo del cliente (Auth)
+POST {{HOST}}/auth/email/verify
+Authorization: Bearer {{TOKEN}}
+Content-Type: application/json
+
+{
+  "verifyCode": "189624"
+}
+
+
+### 🔐 2.1. Reenvio de codigo del cliente por correo y obtencion del token
+POST {{HOST}}/auth/email/resend
+x-api-key: {{API_KEY}}
+Content-Type: application/json
+
+{
+  "email": "jyepes@vilo.team"
+}
+
+### 🔐 3. Contrasena del cliente (Auth)
+POST {{HOST}}/auth/password
+Authorization: Bearer {{TOKEN}}
+Content-Type: application/json
+
+{
+  "password": "Vilotech!!@#4"
+}
+
+### 🔐 4. Registro de telefono del cliente
+POST {{HOST}}/client/phone
+Authorization: Bearer {{TOKEN}}
+Content-Type: application/json
+
+{
+  "countryPrefix": "+58",
+  "phonNumber": "4123867513"
+}
+
+### 🔐 5. Verificar sms del cliente (Auth)
+POST {{HOST}}/auth/phone/verify
+Authorization: Bearer {{TOKEN}}
+Content-Type: application/json
+
+{
+  "countryPrefix": "+58",
+  "phonNumber": "4123867513",
+  "verifyCode": "123456"
+}
+
+
+### 🔐 5.1. Reenvio de sms del cliente
+POST {{HOST}}/auth/phone/resend
+Authorization: Bearer {{TOKEN}}
+Content-Type: application/json
+
+{
+  "countryPrefix": "+58",
+  "phoneNumber": "4123867513"
+}
+
+### 🔐 6 Registro de perfil del cllente
+POST {{HOST}}/client/profile
+Authorization: Bearer {{TOKEN}}
+Content-Type: application/json
+
+{
+  "countryPrefix": "58",
+  "phoneNumber": "4123867513",
+  "firstName": "Jesus",
+  "secondName": "D",
+  "firstSurname": "Yepes",
+  "secondSurname": "T",
+  "birthdayDate": "1995-05-12",
+  "genderId": "{{gender_id}}",
+  "addresses": [
+    {
+      "city": "Caracas",
+      "address": "Las mercedes, baruta , tamanaco",
+      "zipCode": "1060",
+      "countryId": "{{country_id}}",
+      "stateId": "{{state_id}}"
+    },
+    {
+      "city": "Caracas",
+      "address": "El unicentro, sucre , el marquez",
+      "zipCode": "1060",
+      "countryId": "{{country_id}}",
+      "stateId": "{{state_id}}"
+    }
+  ]
+}
+
+
+
+
