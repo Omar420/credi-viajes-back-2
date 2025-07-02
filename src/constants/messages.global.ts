@@ -25,6 +25,20 @@ export const ERROR_MESSAGES = {
     ERROR_PRODUCT_STOCK_INSUFFICIENT: "Stock insuficiente para el producto solicitado.",
     ERROR_CATEGORY_NOT_FOUND: "Categoría no encontrada para el producto.",
 
+    // Bookings
+    ERROR_BOOKING_NOT_FOUND: "Reserva no encontrada.",
+    ERROR_BOOKING_CREATION_FAILED: "No se pudo crear la reserva.",
+    ERROR_BOOKING_UPDATE_FAILED: "No se pudo actualizar la reserva.",
+    ERROR_BOOKING_CANCELLATION_FAILED: "No se pudo cancelar la reserva.",
+    ERROR_BOOKING_ALREADY_CANCELLED_OR_COMPLETED: "La reserva ya está cancelada o completada y no se puede modificar.",
+    ERROR_BOOKING_STATUS_NOT_FOUND: "Estado de reserva no encontrado o no válido.",
+    ERROR_PASSENGER_VALIDATION_ERROR: "Error en la validación de los datos de pasajeros.", // Mensaje genérico para lógica de pasajeros
+    ERROR_INVALID_PASSENGER_COUNT: "El número de pasajeros no cumple con los límites permitidos (1-9).",
+    ERROR_MISSING_ADULT_FOR_CHILD_OR_INFANT: "Se requiere al menos un pasajero adulto si viajan niños o infantes.",
+    ERROR_TOO_MANY_INFANTS_PER_ADULT: "Hay demasiados infantes para el número de adultos en la reserva.",
+    ERROR_BOOKING_REFERENCE_GENERATION_FAILED: "No se pudo generar una referencia de reserva única.",
+
+
     // Shared
     ERROR_ID_NOT_PROVIDED: "No se proporcionó un ID válido.",
     ERROR_INVALID_ID_FORMAT: "El formato del ID proporcionado es inválido."
@@ -51,11 +65,20 @@ export const SUCCESS_MESSAGES = {
     SUCCESS_PRODUCT_UPDATED: "Producto actualizado exitosamente.",
     SUCCESS_PRODUCT_DELETED: "Producto eliminado exitosamente.",
     SUCCESS_PRODUCTS_FETCHED: "Productos obtenidos exitosamente.",
-    SUCCESS_PRODUCT_FETCHED: "Producto obtenido exitosamente."
+    SUCCESS_PRODUCT_FETCHED: "Producto obtenido exitosamente.",
+
+    // Bookings
+    SUCCESS_BOOKING_CREATED: "Reserva creada exitosamente.",
+    SUCCESS_BOOKING_UPDATED: "Reserva actualizada exitosamente.",
+    SUCCESS_BOOKING_DELETED: "Reserva eliminada exitosamente.", 
+    SUCCESS_BOOKING_CANCELLED: "Reserva cancelada exitosamente.",
+    SUCCESS_BOOKINGS_FETCHED: "Reservas obtenidas exitosamente.",
+    SUCCESS_BOOKING_FETCHED: "Reserva obtenida exitosamente."
 
 };
 
 export const INFO_MESSAGES = {
     NO_RECORDS_FOUND: "No se encontraron registros.",
+    NO_BOOKINGS_FOUND: "No se encontraron reservas para este usuario.",
     // Add other informational messages as needed
 };

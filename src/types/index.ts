@@ -8,3 +8,5 @@ export * from "./mail.type";
 export * from "./client.type";
 export * from "./countries.type";
 export * from "./product.type";
+export * from "./passenger.type";
+export * from "./booking.type";
