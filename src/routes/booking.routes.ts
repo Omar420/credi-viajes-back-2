@@ -84,7 +84,7 @@ router.patch( // Usamos PATCH porque es una actualización parcial
         check("fk_status_id", "El ID del estado debe ser un UUID.").optional().isUUID(),
         check("paymentSuccessful", "El estado de pago debe ser booleano.").optional().isBoolean(),
         // Asegurar que al menos uno de los campos opcionales esté presente
-        body().custom((value, { req }) => {
+        body().custom((_value, { req }) => { // Se cambia 'value' por '_value' para indicar que no se usa
             if (req.body.fk_status_id === undefined && req.body.paymentSuccessful === undefined) {
                 throw new Error('Se debe proporcionar al menos fk_status_id o paymentSuccessful.');
             }

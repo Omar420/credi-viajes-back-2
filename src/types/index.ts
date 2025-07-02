@@ -10,3 +10,5 @@ export * from "./countries.type";
 export * from "./product.type";
 export * from "./passenger.type";
 export * from "./booking.type";
+export * from "./custom-request.d"; // Asegurarse que este está si no estaba antes
+export * from "./shared.type";

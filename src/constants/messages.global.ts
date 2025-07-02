@@ -16,6 +16,12 @@ export const ERROR_MESSAGES = {
     ERROR_USER_ALREADY_EXISTS: "Ya existe un usuario con este correo electrónico.",
     ERROR_EMAIL_NOT_VERIFIED: "El correo electrónico no ha sido verificado.",
     ERROR_OTP_INVALID_OR_EXPIRED: "El código OTP es inválido o ha expirado.",
+    ERROR_CLIENT_NOT_FOUND: "Cliente asociado al usuario no encontrado.",
+    ERROR_OLD_PASSWORD_INCORRECT: "La contraseña actual es incorrecta.",
+    ERROR_NEW_PASSWORDS_DO_NOT_MATCH: "La nueva contraseña y su confirmación no coinciden.",
+    ERROR_PASSWORD_POLICY_VIOLATION: "La nueva contraseña no cumple con los requisitos de seguridad (mínimo 8 caracteres).", // Ajustar si la política es más compleja
+    ERROR_PASSWORD_RESET_EMAIL_SENT_INFO: "Si existe una cuenta verificada asociada a este correo, se enviará un código de reseteo.", // No es un error, pero se maneja en flujos de error a veces
+
 
     // Products
     ERROR_PRODUCT_NOT_FOUND: "Producto no encontrado.",

@@ -49,16 +49,19 @@ export const MAIL = {
   NODEMAILER_SMTP_INFO_PASS: process.env.NODEMAILER_SMTP_INFO_PASS || "",
 
   TEMPLATES: {
-    PASSWORD_RESET: "password-reset-code",
+    PASSWORD_RESET: "password-reset-code", // Este ya existía, podría ser el mismo que PASSWORD_RESET_OTP_CODE
     USER_REGISTRATION: "user-registration",
     EMAIL_VERIFICATION: "client-registration-otp-code",
+    PASSWORD_RESET_OTP_CODE: "password-reset-otp-code", // Específico para el OTP de reseteo
+    PASSWORD_CHANGED_CONFIRMATION: "password-changed-confirmation", // Para confirmar el cambio
 
   },
   SUBJECT: {
-
-    PASSWORD_RESET: `Recupera tu contraseña - ${CONFIG.COMPANY_NAME}`,
+    PASSWORD_RESET: `Recupera tu contraseña - ${CONFIG.COMPANY_NAME}`, // Asunto para el email con link/instrucciones de reseteo
     USER_REGISTRATION: `Registro de usuario - ${CONFIG.COMPANY_NAME}`,
     EMAIL_VERIFICATION: `Verificación de Correo electrónico - ${CONFIG.COMPANY_NAME}`,
+    PASSWORD_RESET_OTP: `Tu código para restablecer la contraseña - ${CONFIG.COMPANY_NAME}`, // Asunto para el email con OTP
+    PASSWORD_CHANGED_CONFIRMATION: `Confirmación de cambio de contraseña - ${CONFIG.COMPANY_NAME}`, // Asunto para la confirmación
   },
 }
 

@@ -11,15 +11,14 @@ const OTPEmailVerifications = sequelize.define(
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
         },
-        // definimos authId como atributo y lo mapeamos a la columna fk_auth_id
-        authId: {
+        authId: { // Sequelize mapeará esto a fk_auth_id si se usa underscored: true globalmente o field: 'fk_auth_id'
             type: DataTypes.UUID,
             allowNull: false,
-            field: "fk_auth_id",
+            field: "fk_auth_id", // Manteniendo la definición explícita del campo por consistencia
         },
         code: {
             allowNull: false,
-            unique: true,
+            unique: true, // Considerar si el código debe ser único globalmente o por authId y propósito
             type: DataTypes.STRING,
         },
         used: {
@@ -27,28 +26,27 @@ const OTPEmailVerifications = sequelize.define(
             allowNull: false,
             defaultValue: false,
         },
+        purpose: { // Añadido el campo purpose directamente en la definición
+            type: DataTypes.ENUM('email_verification', 'password_reset'),
+            allowNull: false,
+            defaultValue: 'email_verification',
+        },
         expiresAt: {
             allowNull: false,
             type: DataTypes.DATE,
         },
-        createdAt: {
-            allowNull: false,
-            type: DataTypes.DATE,
-        },
-        updatedAt: {
-            allowNull: false,
-            type: DataTypes.DATE,
-        },
+        // createdAt y updatedAt serán manejados por Sequelize si timestamps: true está en las opciones del modelo
     },
     {
         tableName: "OTPEmailVerifications",
+        timestamps: true, // Habilita createdAt y updatedAt automáticos
     }
 );
 
-// Asociación con alias
-AuthModel.hasOne(OTPEmailVerifications, {
-    as: "emailOtp",
-    foreignKey: "authId",
+// Asociación con AuthModel
+AuthModel.hasMany(OTPEmailVerifications, {
+    as: "emailOtps", // Un Auth puede tener varios OTPs (ej. uno para email, otro para password reset)
+    foreignKey: "authId", 
     sourceKey: "id",
 });
 

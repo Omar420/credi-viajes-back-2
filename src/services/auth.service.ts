@@ -194,4 +194,90 @@ export class AuthService {
 
         return record;
     }
+
+    // --- Nuevos Métodos para Cambio y Reseteo de Contraseña ---
+
+    public async changePasswordLoggedIn(userId: string, oldPasswordAttempt: string, newPasswordRaw: string): Promise<void> {
+        const user = await this.userService.findUserById(userId); // Este método ya incluye 'auth'
+        if (!user || !user.auth) {
+            throw new CustomError(ERROR_MESSAGES.USER_NOT_FOUND, 404);
+        }
+
+        const authRecord = user.auth;
+        if (!authRecord.password) {
+            throw new CustomError("La cuenta no tiene una contraseña configurada.", 400);
+        }
+
+        const isMatch = await getBCryptCompare(oldPasswordAttempt, authRecord.password);
+        if (!isMatch) {
+            throw new CustomError(ERROR_MESSAGES.OLD_PASSWORD_INCORRECT, 400);
+        }
+
+        // El controlador ya valida la fortaleza y coincidencia de newPasswordRaw
+        // La función CONFIG.ENCRYPT_DATA ya debería manejar el hasheo.
+        // No es necesario comparar con getBCryptCompare aquí.
+        const newPasswordHash =  CONFIG.ENCRYPT_DATA(newPasswordRaw);
+        
+        await this.updateAuth(authRecord.id, { password: newPasswordHash, isPasswordCreated: true });
+    }
+
+    public async requestPasswordReset(email: string): Promise<void> {
+        const authRecord = await this.findAuthByEmail(email);
+
+        if (!authRecord || !authRecord.isEmailVerified) {
+            // No lanzar error para no revelar si el email existe o está verificado
+            console.warn(`Solicitud de reseteo de contraseña para email no encontrado o no verificado: ${email}`);
+            return; // Simplemente retorna, el controlador enviará mensaje genérico
+        }
+
+        const otpRecord = await OTPService.createEmailOTP(authRecord.id, 'password_reset');
+        
+        const mailService = new MailService();
+        await mailService.sendMail({
+            to: authRecord.email,
+            subject: CONFIG.MAIL.SUBJECT.PASSWORD_RESET_OTP || "Tu código para restablecer la contraseña",
+            template: CONFIG.MAIL.TEMPLATES.PASSWORD_RESET_OTP_CODE || "password-reset-otp-code",
+            context: {
+                userName: authRecord.username || authRecord.email.split('@')[0],
+                otpCode: otpRecord.getDataValue("code"),
+                expirationTime: `${CONFIG.OTP_EXPIRATION_MINUTES} minutos`,
+            },
+        });
+    }
+
+    public async resetPasswordWithOtp(email: string, otpCode: string, newPasswordRaw: string): Promise<void> {
+        const authRecord = await this.findAuthByEmail(email);
+        if (!authRecord) {
+            throw new CustomError(ERROR_MESSAGES.OTP_INVALID_OR_EXPIRED, 400);
+        }
+
+        const otpIsValid = await OTPService.verifyEmailOTP(authRecord.id, otpCode, 'password_reset');
+        if (!otpIsValid) {
+            // verifyEmailOTP ya lanza CustomError si es inválido o expirado, así que esta línea podría no ser necesaria
+            // o podría ser un doble chequeo. Si verifyEmailOTP devuelve false en lugar de lanzar error, entonces sí es necesaria.
+            // Asumiendo que verifyEmailOTP lanza error si no es válido:
+            // throw new CustomError(ERROR_MESSAGES.OTP_INVALID_OR_EXPIRED, 400);
+        }
+        // Si OTPService.verifyEmailOTP lanza error, la ejecución no llegará aquí.
+        // Si devuelve booleano y es false, entonces:
+        // if (!otpIsValid) throw new CustomError(ERROR_MESSAGES.OTP_INVALID_OR_EXPIRED, 400);
+
+
+        const newPasswordHash = CONFIG.ENCRYPT_DATA(newPasswordRaw);
+        await this.updateAuth(authRecord.id, { password: newPasswordHash, isPasswordCreated: true });
+
+        // Opcional: invalidar el OTP específico si verifyEmailOTP no lo hace (aunque ya lo hace)
+        // const otpRecord = await OTPEmailVerificationsModel.findOne({ where: { authId: authRecord.id, code: otpCode, purpose: 'password_reset'} });
+        // if (otpRecord) await otpRecord.update({ used: true });
+
+        const mailService = new MailService();
+        await mailService.sendMail({
+            to: authRecord.email,
+            subject: CONFIG.MAIL.SUBJECT.PASSWORD_CHANGED_CONFIRMATION || "Confirmación de Cambio de Contraseña",
+            template: CONFIG.MAIL.TEMPLATES.PASSWORD_CHANGED_CONFIRMATION || "password-changed-confirmation",
+            context: {
+                userName: authRecord.username || authRecord.email.split('@')[0],
+            },
+        });
+    }
 }

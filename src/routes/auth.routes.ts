@@ -2,7 +2,11 @@ import { createPasswordHandler, loginHandler, postSingIn, refreshTokenHandler, r
 import { checkAuthFlag, checkUserByEmailMiddleware, validateApiKeyMiddleware, validateFieldsMiddleware, validateJWTMiddleware } from "@src/middlewares";
 import { Router } from "express";
 import { check } from "express-validator";
-
+import { 
+    changePasswordLoggedInHandler, 
+    forgotPasswordRequestHandler, 
+    resetPasswordWithTokenHandler 
+} from "@src/controllers/auth.controller";
 
 const router = Router();
 
@@ -82,6 +86,63 @@ router
     ],
         retrySmsOTPHandler);
 
+// Nuevas rutas para cambio y reseteo de contraseña
+ // Asegurar que los imports estén correctos al inicio del archivo si se mueven allí
 
+// Cambiar contraseña (usuario logueado)
+router.post(
+    "/change-password",
+    [
+        validateJWTMiddleware, // Usuario debe estar logueado
+        check("oldPassword", "La contraseña actual es obligatoria.").notEmpty(),
+        check("newPassword", "La nueva contraseña es obligatoria y debe tener al menos 8 caracteres.")
+            .isLength({ min: 8 }),
+        check("confirmNewPassword", "La confirmación de la nueva contraseña es obligatoria.")
+            .notEmpty()
+            .custom((value: any, { req }: any) => {
+                if (value !== req.body.newPassword) {
+                    throw new Error("La nueva contraseña y su confirmación no coinciden.");
+                }
+                return true;
+            }),
+        validateFieldsMiddleware,
+    ],
+    changePasswordLoggedInHandler
+);
+
+// Solicitar reseteo de contraseña (olvidó contraseña - público)
+router.post(
+    "/forgot-password",
+    [
+        validateApiKeyMiddleware, // Opcional, si se quiere proteger este endpoint de alguna manera
+        check("email", "Se requiere un correo electrónico válido.").isEmail(),
+        validateFieldsMiddleware,
+    ],
+    forgotPasswordRequestHandler
+);
+
+// Resetear contraseña con token/OTP (público)
+router.post(
+    "/reset-password",
+    [
+        validateApiKeyMiddleware, // Opcional
+        check("email", "Se requiere un correo electrónico válido.").isEmail(),
+        check("token", "El código OTP es obligatorio y debe tener 6 dígitos.")
+            .isLength({ min: 6, max: 6 })
+            .isNumeric(),
+        check("newPassword", "La nueva contraseña es obligatoria y debe tener al menos 8 caracteres.")
+            .isLength({ min: 8 }),
+        check("confirmNewPassword", "La confirmación de la nueva contraseña es obligatoria.")
+            .notEmpty()
+            .custom((value: any, { req }: any) => {
+                if (value !== req.body.newPassword) {
+                    throw new Error("La nueva contraseña y su confirmación no coinciden.");
+                }
+                return true;
+            }),
+        validateFieldsMiddleware,
+    ],
+    resetPasswordWithTokenHandler
+);
 
 export default router;

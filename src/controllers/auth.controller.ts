@@ -7,6 +7,14 @@ import { validateIsEmail } from "@src/utils/validate-is-email";
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 
+import { AuthModel, OtpEmailVerificationModel, UserModel } from "@src/models";
+import { MailService } from "@src/services/mail.service"; 
+import { generateSixDigitCode } from "@src/utils"; 
+import { AuthenticatedRequest } from "@src/types"; 
+// Se importa CONFIG como GlobalConfig para evitar colisión con la variable CONFIG ya importada en la parte superior del archivo.
+import { CONFIG as GlobalConfig, MAIL_TEMPLATES, MAIL as GlobalMail } from "@src/constants/config-global"; 
+import { SUCCESS_MESSAGES as SM, ERROR_MESSAGES as EM } from "@src/constants/messages.global";
+
 
 /**
  * Handles the sign-in process for an existing user.
@@ -74,6 +82,186 @@ export async function postSingIn(
         });
     }
 }
+
+// Nuevos métodos para cambio y reseteo de contraseña
+// Añadidos al final del archivo.
+
+
+// Helper para validar la fortaleza de la contraseña (ejemplo básico)
+const isPasswordStrong = (password: string): boolean => {
+    return password.length >= 8;
+};
+
+export const changePasswordLoggedInHandler = async (req: AuthenticatedRequest, res: Response) => {
+    const { oldPassword, newPassword, confirmNewPassword } = req.body;
+    const userId = req.user?.id; 
+
+    if (!userId) {
+        return res.status(401).json({ message: EM.ERROR_UNAUTHORIZED_ACCESS });
+    }
+
+    if (!newPassword || !confirmNewPassword || !oldPassword) {
+        return res.status(400).json({ message: "Todos los campos son requeridos: contraseña actual, nueva contraseña y confirmación." });
+    }
+
+    if (newPassword !== confirmNewPassword) {
+        return res.status(400).json({ message: "La nueva contraseña y su confirmación no coinciden." });
+    }
+
+    if (!isPasswordStrong(newPassword)) {
+        return res.status(400).json({ message: "La nueva contraseña debe tener al menos 8 caracteres." });
+    }
+
+    try {
+        const userService = new UserService(); 
+        const userWithAuth = await userService.findUserById(userId);
+
+        if (!userWithAuth || !userWithAuth.auth) {
+            return res.status(404).json({ message: EM.ERROR_USER_NOT_FOUND });
+        }
+
+        const authRecord = userWithAuth.auth;
+
+        if (!authRecord.password) { 
+             return res.status(400).json({ message: "No hay una contraseña configurada para esta cuenta." });
+        }
+
+        const isOldPasswordCorrect = await getBCryptCompare(oldPassword, authRecord.password);
+        if (!isOldPasswordCorrect) {
+            return res.status(400).json({ message: "La contraseña actual es incorrecta." });
+        }
+
+        const hashedNewPassword = encryptData(newPassword);
+        const authToUpdate = await AuthModel.findByPk(authRecord.id);
+        if (authToUpdate) {
+            await authToUpdate.update({ password: hashedNewPassword, isPasswordCreated: true }); 
+        } else {
+            throw new Error("Registro de autenticación no encontrado para el usuario durante la actualización.");
+        }
+        
+        return res.status(200).json({ message: SM.SUCCESS_PASSWORD_CHANGED });
+
+    } catch (error: any) {
+        console.error("Error changing password (logged in):", error);
+        return res.status(500).json({ message: EM.ERROR_INTERNAL_SERVER, error: error.message });
+    }
+};
+
+export const forgotPasswordRequestHandler = async (req: Request, res: Response) => {
+    const { email } = req.body;
+
+    if (!email || !validateIsEmail(email)) {
+        return res.status(400).json({ message: "Se requiere un correo electrónico válido." });
+    }
+
+    try {
+        const authRecord = await authService.findAuthByEmail(email); // authService ya existe
+
+        if (!authRecord || !authRecord.isEmailVerified) {
+            console.log(`Intento de reseteo para email no encontrado o no verificado: ${email}`);
+            return res.status(200).json({ message: "Si existe una cuenta verificada asociada a este correo, se enviará un código de reseteo." });
+        }
+        
+        const otpCode = generateSixDigitCode();
+        const expiresAt = new Date(Date.now() + GlobalConfig.OTP_EXPIRATION_MINUTES * 60 * 1000);
+
+         await OtpEmailVerificationModel.update(
+            { used: true },
+            { where: { authId: authRecord.id, used: false /*, purpose: 'password_reset' */ } } 
+        );
+
+        await OtpEmailVerificationModel.create({
+            authId: authRecord.id,
+            code: otpCode,
+            expiresAt,
+            used: false,
+            // purpose: 'password_reset' 
+        });
+        
+        const mailService = new MailService(); 
+        await mailService.sendMail({
+            to: authRecord.email,
+            subject: GlobalMail.SUBJECT.PASSWORD_RESET || "Tu código para restablecer la contraseña", 
+            template: GlobalMail.TEMPLATES.PASSWORD_RESET || "password-reset-otp-code", 
+            context: {
+                userName: authRecord.username || authRecord.email.split('@')[0],
+                otpCode,
+                expirationTime: `${GlobalConfig.OTP_EXPIRATION_MINUTES} minutos`,
+            },
+        });
+
+        return res.status(200).json({ message: "Si existe una cuenta verificada asociada a este correo, se enviará un código de reseteo." });
+
+    } catch (error: any) {
+        console.error("Error en forgot password request:", error);
+        return res.status(500).json({ message: EM.ERROR_INTERNAL_SERVER, error: error.message });
+    }
+};
+
+export const resetPasswordWithTokenHandler = async (req: Request, res: Response) => {
+    const { email, token, newPassword, confirmNewPassword } = req.body;
+
+    if (!email || !validateIsEmail(email)) {
+        return res.status(400).json({ message: "Se requiere un correo electrónico válido." });
+    }
+    if (!token) {
+        return res.status(400).json({ message: "Se requiere el código OTP." });
+    }
+    if (!newPassword || !confirmNewPassword) {
+        return res.status(400).json({ message: "La nueva contraseña y su confirmación son requeridas." });
+    }
+    if (newPassword !== confirmNewPassword) {
+        return res.status(400).json({ message: "La nueva contraseña y su confirmación no coinciden." });
+    }
+    if (!isPasswordStrong(newPassword)) {
+        return res.status(400).json({ message: "La nueva contraseña debe tener al menos 8 caracteres." });
+    }
+
+    try {
+        const authRecord = await authService.findAuthByEmail(email);
+        if (!authRecord) {
+            return res.status(400).json({ message: EM.ERROR_OTP_INVALID_OR_EXPIRED });
+        }
+
+        const otpEntry = await OtpEmailVerificationModel.findOne({
+            where: {
+                authId: authRecord.id,
+                code: token,
+                used: false,
+                // purpose: 'password_reset' 
+            },
+        });
+
+        if (!otpEntry) {
+            return res.status(400).json({ message: EM.ERROR_OTP_INVALID_OR_EXPIRED });
+        }
+
+        if (new Date() > otpEntry.expiresAt) {
+            await otpEntry.update({ used: true }); 
+            return res.status(400).json({ message: EM.ERROR_OTP_INVALID_OR_EXPIRED });
+        }
+
+        const hashedNewPassword = encryptData(newPassword);
+        await authRecord.update({ password: hashedNewPassword, isPasswordCreated: true });
+        await otpEntry.update({ used: true }); 
+        
+        const mailService = new MailService();
+        await mailService.sendMail({
+            to: authRecord.email,
+            subject: GlobalMail.SUBJECT.PASSWORD_CHANGED_CONFIRMATION || "Confirmación de Cambio de Contraseña", 
+            template: MAIL_TEMPLATES.PASSWORD_CHANGED_CONFIRMATION || "password-changed-confirmation", 
+            context: {
+                userName: authRecord.username || authRecord.email.split('@')[0],
+            }
+        });
+
+        return res.status(200).json({ message: SM.SUCCESS_PASSWORD_CHANGED });
+
+    } catch (error: any) {
+        console.error("Error reseting password with token:", error);
+        return res.status(500).json({ message: EM.ERROR_INTERNAL_SERVER, error: error.message });
+    }
+};
 
 /** =============================== CLient =================================*/
 

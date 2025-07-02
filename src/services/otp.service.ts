@@ -11,33 +11,45 @@ export class OTPService {
      * Si hay un registro activo (used=false), actualiza código y expiración.
      * En caso contrario, crea un nuevo registro.
      */
-    static async createEmailOTP(authId: string) {
-
+    static async createEmailOTP(authId: string, purpose: 'email_verification' | 'password_reset' = 'email_verification') {
         const code = generateSixDigitCode();
         const expiresAt = addMinutes(new Date(), Number(CONFIG.OTP_EXPIRATION_MINUTES));
 
-        const existing = await OTPEmailVerificationsModel.findOne({
-            where: { authId, used: false }
+        // Invalidar OTPs anteriores del mismo tipo para este authId
+        await OTPEmailVerificationsModel.update(
+            { used: true },
+            { where: { authId, purpose, used: false } }
+        );
+
+        // Crear nuevo OTP
+        return OTPEmailVerificationsModel.create({ 
+            authId, 
+            code, 
+            expiresAt, 
+            purpose, // Guardar el propósito del OTP
+            used: false 
         });
-
-        if (existing) {
-            existing.set({ code, expiresAt });
-            await existing.save();
-            return existing;
-        }
-
-        return OTPEmailVerificationsModel.create({ authId, code, expiresAt });
     }
 
     /**
-     * Verifica un OTP de email.
+     * Verifica un OTP de email para un propósito específico.
      * Marca como usado si es válido.
      */
-    static async verifyEmailOTP(authId: string, code: string): Promise<boolean> {
+    static async verifyEmailOTP(authId: string, code: string, purpose: 'email_verification' | 'password_reset' = 'email_verification'): Promise<boolean> {
         const record = await OTPEmailVerificationsModel.findOne({
-            where: { authId, code, used: false }
+            where: { 
+                authId, 
+                code, 
+                used: false, 
+                purpose // Verificar también el propósito
+            }
         });
+
         if (!record || isAfter(new Date(), record.getDataValue('expiresAt'))) {
+            // Si el registro existe pero está expirado, marcarlo como usado para evitar reintentos con el mismo OTP expirado.
+            if (record) {
+                await record.update({ used: true });
+            }
             throw new CustomError(
                 'OTP inválido o expirado',
                 400
