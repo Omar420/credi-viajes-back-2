@@ -1,5 +1,3 @@
-import { IDatePickerControl } from "@src/types";
-
 export type IPaymentTableFilters = {
   search: string;
   currency: string;
