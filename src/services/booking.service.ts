@@ -55,9 +55,15 @@ export class BookingService {
                 }))
             };
 
-            const kiuResponse = await kiuService.getSmartSearch(kiuPayload);
+            const kiuResponse = await kiuService.createSmartBooking(kiuPayload);
 
-            // Aquí puedes añadir la lógica para guardar la reserva en tu base de datos si es necesario
+            const bookingData = {
+                // ... Mapea los datos de la respuesta de KIU a tu modelo de Booking
+                bookingReference: kiuResponse.booking.booking.recordLocator,
+                // ... etc.
+            };
+
+            // const newBooking = await BookingModel.create(bookingData, { transaction });
 
             await transaction.commit();
 
@@ -77,10 +83,8 @@ export class BookingService {
     try {
         transaction = await sequelize.transaction();
 
-        // Generate reference if not provided
         const bookingReference = payload.bookingReference || await generateUniqueBookingReference();
         
-        // Create the booking
         const createdBooking = await BookingModel.create({
             name: payload.name,
             description: payload.description,
@@ -99,7 +103,6 @@ export class BookingService {
             fk_updated_by_id: payload.fk_updated_by_id,
         }, { transaction });
 
-        // Create passengers
         const bookingPassengersEntries = await Promise.all(
             payload.passengers.map(async (passengerData) => {
                 const newPassenger = await PassengersModel.create({
@@ -154,7 +157,7 @@ export class BookingService {
                 includes.push({
                     model: PassengersModel, 
                     as: 'passengers',
-                    through: { attributes: [] }, // No join table attributes needed here
+                    through: { attributes: [] },
                     include: [
                         { model: GenderModel, as: 'gender' },
                         { model: CountriesModel, as: 'nationality' },

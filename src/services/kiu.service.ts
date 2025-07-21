@@ -34,4 +34,18 @@ export class KiuService {
     );
     return response.data;
   }
+
+  async createSmartBooking(data: ISmartBookingRequest) {
+    const response = await axios.post(
+      `${API_BASE_URL_KIU}/kiu/smart-booking?integrationID=${KIU_INTEGRATION_ID}`,
+      data,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': API_KEY_KIU,
+        },
+      }
+    );
+    return response.data;
+  }
 }
