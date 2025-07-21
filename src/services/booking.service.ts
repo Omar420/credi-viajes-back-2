@@ -73,9 +73,7 @@ export class BookingService {
 
             await transaction.commit();
 
-            const { ...rest } = kiuResponse;
-
-            return { ...rest, data: undefined };
+            return kiuResponse;
 
         } catch (error: unknown) {
             if (transaction) await transaction.rollback();
