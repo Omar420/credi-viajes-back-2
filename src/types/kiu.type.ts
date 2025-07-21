@@ -1,5 +1,5 @@
-import { KiuSearch } from "@src/models/Kiu/Kiu-search.model";
-import { KiuSmartSearch } from "@src/models/Kiu/Kiu-smart-search.model";
+import { KiuSearch } from "@src/models/kiu/kiu-search.model";
+import { KiuSmartSearch } from "@src/models/kiu/kiu-smart-search.model";
 
 export interface KiuAvailabilityFlightsRequest extends KiuSearch {}
 
