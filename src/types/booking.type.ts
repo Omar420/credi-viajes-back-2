@@ -6,6 +6,28 @@ import {
     IUserSummary 
 } from "./shared.type";
 
+export interface IKiuBookingResponse {
+    message: string;
+    status: number;
+    booking: IKiuBooking;
+    ok: boolean;
+}
+
+export interface IKiuBooking {
+    passengers: any[];
+    flights: any[];
+    pricing: any;
+    contacts: any[];
+    booking: {
+        recordLocator: string;
+        confirmed: boolean;
+        cancelled: boolean;
+        pendingItems: any;
+    };
+    bookingOffice: any;
+    pointOfSale: any;
+}
+
 export interface ISmartBookingRequest {
     email: string;
     phone: string;
@@ -149,7 +171,7 @@ export interface IBookingAttributes {
     client?: IClientSummary;       // Or full IClientAttributes
     createdBy?: IUserSummary;      // Or full IUserAttributes
     updatedBy?: IUserSummary;      // Or full IUserAttributes
-    // passengers?: IPassengerDetails[]; // Array of IPassengerDetails
+    // passengers?: IPassengerDetails[]; // Array de IPassengerDetails
 }
 
 // For BookingService.createBooking method - data strictly for the Booking table

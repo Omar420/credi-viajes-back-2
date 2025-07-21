@@ -12,7 +12,7 @@ import {
     DocumentTypesModel,
     GenderModel
 } from "@src/models";
-import { ISmartBookingRequest, IBookingAttributes, IBookingUpdatePayload, IBookingServiceCreatePayload } from "@src/types/booking.type";
+import { ISmartBookingRequest, IBookingAttributes, IBookingUpdatePayload, IBookingServiceCreatePayload, IKiuBookingResponse } from "@src/types/booking.type";
 import { IPassengerDataInput } from "@src/types/passenger.type";
 import { generateUniqueBookingReference } from "@src/utils/generate-booking-reference"; 
 import { CustomError } from "@src/utils/custom-exception.error";
@@ -39,7 +39,7 @@ export class BookingService {
         return null;
     }
 
-    public async createSmartBooking(payload: ISmartBookingRequest, userId: string): Promise<any> {
+    public async createSmartBooking(payload: ISmartBookingRequest, userId: string): Promise<IKiuBookingResponse> {
         let transaction: Transaction | undefined;
         try {
             transaction = await sequelize.transaction();
@@ -55,19 +55,21 @@ export class BookingService {
                 }))
             };
 
-            const kiuResponse = await kiuService.createSmartBooking(kiuPayload);
+            const kiuResponse: IKiuBookingResponse = await kiuService.createSmartBooking(kiuPayload);
 
             const bookingData = {
-                // ... Mapea los datos de la respuesta de KIU a tu modelo de Booking
                 bookingReference: kiuResponse.booking.booking.recordLocator,
-                // ... etc.
+                kiu_response: kiuResponse,
+                // ... Mapea el resto de los datos necesarios
             };
 
             // const newBooking = await BookingModel.create(bookingData, { transaction });
 
             await transaction.commit();
 
-            return kiuResponse;
+            const { ...rest } = kiuResponse;
+
+            return { ...rest, data: undefined };
 
         } catch (error: unknown) {
             if (transaction) await transaction.rollback();
