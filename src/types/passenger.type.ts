@@ -2,6 +2,21 @@ import { IClientSummary, ICountrySummary, IDocumentTypeSummary, IGenderSummary }
 
 export type PassengerType = 'adult' | 'child' | 'infant';
 
+export interface ISmartBookingPassenger {
+    surname: string;
+    name: string;
+    gender: string;
+    foid_type: string;
+    document_type: string;
+    foid_id: string;
+    date_of_birth: string;
+    passenger_type_code: string;
+    nationality: string;
+    issue_country: string;
+    expiration_date: string;
+    representative?: number;
+}
+
 export interface IPassengerDataBase { // Campos base comunes
     firstName: string;
     firstSurname: string;

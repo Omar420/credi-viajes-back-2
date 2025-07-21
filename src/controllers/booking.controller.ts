@@ -19,7 +19,7 @@ import {
     BookingModel
 } from "@src/models";
 import { ERROR_MESSAGES, SUCCESS_MESSAGES, INFO_MESSAGES } from "@src/constants/messages.global";
-import { IBookingCreationPayload, IBookingAttributes, IBookingUpdatePayload, IBookingServiceCreatePayload } from "@src/types/booking.type";
+import { IBookingCreationPayload, IBookingAttributes, IBookingUpdatePayload, IBookingServiceCreatePayload, ISmartBookingRequest } from "@src/types/booking.type";
 import { IPassengerDataInput, IPassengerCreationAttributes, IPassengerAttributes } from "@src/types/passenger.type";
 import { CustomError } from "@src/utils/custom-exception.error";
 import { AuthenticatedRequest } from "@src/types";
@@ -29,6 +29,34 @@ const bookingService = new BookingService();
 const clientService = new ClientService();
 const passengerService = new PassengerService();
 const bookingPassengersService = new BookingPassengersService();
+
+export const createSmartBooking = async (req: AuthenticatedRequest, res: Response) => {
+    const payload = req.body as ISmartBookingRequest;
+    const userId = req.uid;
+
+    if (!userId) {
+        return res.status(401).json({ message: ERROR_MESSAGES.ERROR_UNAUTHORIZED_ACCESS });
+    }
+
+    try {
+        const result = await bookingService.createSmartBooking(payload, userId);
+
+        return res.status(201).json({
+            message: SUCCESS_MESSAGES.SUCCESS_RESOURCE_CREATED,
+            data: result,
+        });
+
+    } catch (error: any) {
+        console.error("Error creating smart booking:", error);
+        if (error instanceof CustomError) {
+            return res.status(error.statusCode).json({ message: error.message, errors: error.getErrors() });
+        }
+        return res.status(500).json({
+            message: ERROR_MESSAGES.ERROR_INTERNAL_SERVER,
+            errorDetails: error.message
+        });
+    }
+};
 
 const validatePassengerLogic = (passengers: IPassengerDataInput[]): string | null => {
     if (passengers.length === 0 || passengers.length > 9) {
@@ -52,7 +80,7 @@ const validatePassengerLogic = (passengers: IPassengerDataInput[]): string | nul
 
 export const createBooking = async (req: AuthenticatedRequest, res: Response) => {
     const payload = req.body as IBookingCreationPayload;
-    const userId = req.uid; // Cambiado a req.uid
+    const userId = req.uid;
 
     if (!userId) {
         return res.status(401).json({ message: ERROR_MESSAGES.ERROR_UNAUTHORIZED_ACCESS });
@@ -100,7 +128,7 @@ export const createBooking = async (req: AuthenticatedRequest, res: Response) =>
         if (transaction) await transaction.rollback();
         console.error("Error creating booking:", error);
         if (error instanceof CustomError) {
-            return res.status(error.statusCode).json({ message: error.message, errors: error });
+            return res.status(error.statusCode).json({ message: error.message, errors: error.getErrors() });
         }
         return res.status(500).json({ 
             message: ERROR_MESSAGES.ERROR_INTERNAL_SERVER, 
@@ -111,7 +139,7 @@ export const createBooking = async (req: AuthenticatedRequest, res: Response) =>
 
 export const getBookingById = async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
-    const userId = req.uid; // Cambiado a req.uid
+    const userId = req.uid;
     const roleCode = req.roleCode;
 
     if (!userId) { 
@@ -144,7 +172,7 @@ export const getBookingById = async (req: AuthenticatedRequest, res: Response) =
     } catch (error: any) {
         console.error("Error fetching booking by ID:", error);
         if (error instanceof CustomError) {
-            return res.status(error.statusCode).json({ message: error.message, errors: error });
+            return res.status(error.statusCode).json({ message: error.message, errors: error.getErrors() });
         }
         return res.status(500).json({ 
             message: ERROR_MESSAGES.ERROR_INTERNAL_SERVER, 
@@ -154,7 +182,7 @@ export const getBookingById = async (req: AuthenticatedRequest, res: Response) =
 };
 
 export const getUserBookings = async (req: AuthenticatedRequest, res: Response) => {
-    const userId = req.uid; // Cambiado a req.uid
+    const userId = req.uid;
 
     if (!userId) {
         return res.status(401).json({ message: ERROR_MESSAGES.ERROR_UNAUTHORIZED_ACCESS });
@@ -189,7 +217,7 @@ export const getUserBookings = async (req: AuthenticatedRequest, res: Response) 
         if (error instanceof CustomError) {
             return res.status(error.statusCode).json({ 
                 message: error.message, 
-                errors: error 
+                errors: error.getErrors()
             });
         }
         return res.status(500).json({ 
@@ -202,7 +230,6 @@ export const getUserBookings = async (req: AuthenticatedRequest, res: Response) 
 export const getAllBookings = async (req: AuthenticatedRequest, res: Response) => {
     const roleCode = req.roleCode;
 
-    // Verificar si es admin
     if (roleCode !== ROLES.ADMIN && roleCode !== ROLES.SUPERADMIN) {
         return res.status(403).json({ 
             message: ERROR_MESSAGES.ERROR_FORBIDDEN_ACCESS 
@@ -221,7 +248,7 @@ export const getAllBookings = async (req: AuthenticatedRequest, res: Response) =
         if (error instanceof CustomError) {
             return res.status(error.statusCode).json({ 
                 message: error.message, 
-                errors: error 
+                errors: error.getErrors()
             });
         }
         return res.status(500).json({ 
@@ -237,7 +264,7 @@ export const updateBookingStatus = async (req: AuthenticatedRequest, res: Respon
         fk_status_id?: string, 
         paymentSuccessful?: boolean
     };
-    const userId = req.uid; // Cambiado a req.uid
+    const userId = req.uid;
     const roleCode = req.roleCode;
 
     if (!userId) {
@@ -266,7 +293,7 @@ export const updateBookingStatus = async (req: AuthenticatedRequest, res: Respon
         if (error instanceof CustomError) {
             return res.status(error.statusCode).json({ 
                 message: error.message, 
-                errors: error 
+                errors: error.getErrors()
             });
         }
         return res.status(500).json({ 
@@ -278,7 +305,7 @@ export const updateBookingStatus = async (req: AuthenticatedRequest, res: Respon
 
 export const cancelBooking = async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
-    const userId = req.uid; // Cambiado a req.uid
+    const userId = req.uid;
 
     if (!userId) {
         return res.status(401).json({ message: ERROR_MESSAGES.ERROR_UNAUTHORIZED_ACCESS });
@@ -294,7 +321,7 @@ export const cancelBooking = async (req: AuthenticatedRequest, res: Response) =>
         if (error instanceof CustomError) {
             return res.status(error.statusCode).json({ 
                 message: error.message, 
-                errors: error 
+                errors: error.getErrors()
             });
         }
         return res.status(500).json({ 

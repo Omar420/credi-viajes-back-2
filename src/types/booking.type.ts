@@ -1,10 +1,40 @@
-import { IPassengerDataInput,  IPassengerSummary } from "./passenger.type";
+import { IPassengerDataInput,  IPassengerSummary, ISmartBookingPassenger } from "./passenger.type";
 import { 
     IBookingStatusSummary, 
     IClientSummary, 
     IDestinationSummary, 
     IUserSummary 
 } from "./shared.type";
+
+export interface ISmartBookingRequest {
+    email: string;
+    phone: string;
+    countryCode: string;
+    carrier: string;
+    passengers: ISmartBookingPassenger[];
+    air_itinerary_information: IAirItineraryInformation[];
+}
+
+export interface IAirItineraryInformation {
+    order: number;
+    departure_information: IDepartureInformation;
+    arrival_information: IArrivalInformation;
+    flight_number: number;
+    reservation_booking_designator_code: string;
+    number_in_party: number;
+    carrier: string;
+}
+
+export interface IDepartureInformation {
+    location_code: string;
+    date: string;
+    time: string;
+}
+
+export interface IArrivalInformation {
+    location_code: string;
+}
+
 
 // In your @src/types/booking.type.ts file
 export interface IBookingCreationPayload {
