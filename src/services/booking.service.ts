@@ -46,6 +46,12 @@ export class BookingService {
 
             const kiuPayload = {
                 ...payload,
+                passengers: payload.passengers.map(p => {
+                    if (p.passenger_type_code !== 'INFT') {
+                        delete p.representative;
+                    }
+                    return p;
+                }),
                 air_itinerary_information: payload.air_itinerary_information.map(item => ({
                     ...item,
                     departure_information: {
