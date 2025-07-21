@@ -1,4 +1,4 @@
-import { getCountries, getGenders } from "@src/controllers/util.controller";
+import { getBookingConstants, getCountries, getGenders } from "@src/controllers/util.controller";
 import { validateApiKeyMiddleware } from "@src/middlewares";
 import { Router } from "express";
 
@@ -15,6 +15,12 @@ router.get("/countries", [
     validateApiKeyMiddleware,
 ],
     getCountries
+);
+
+router.get("/booking-constants", [
+    validateApiKeyMiddleware,
+],
+    getBookingConstants
 );
 
 
