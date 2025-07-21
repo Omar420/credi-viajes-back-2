@@ -1,5 +1,24 @@
-import { KiuSearch } from "@src/models/kiu/kiu-search.model";
-import { KiuSmartSearch } from "@src/models/kiu/kiu-smart-search.model";
+export interface KiuSearch {
+  adults: number;
+  children: number;
+  infants: number;
+  origin: string;
+  destination: string;
+  departure_date: string;
+  return_date: string;
+}
+
+export interface KiuSmartSearch {
+  adults: number;
+  children: number;
+  infants: number;
+  origin: string;
+  destination: string;
+  departure_date: string;
+  return_date: string;
+  flight_numbers: string[];
+  carrier: string;
+}
 
 export interface KiuAvailabilityFlightsRequest extends KiuSearch {}
 
