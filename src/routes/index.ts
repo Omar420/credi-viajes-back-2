@@ -4,3 +4,4 @@ export { default as ClientRoutes } from "./client.routes";
 export { default as UtilRoutes } from "./util.routes";
 export { default as ProductRoutes } from "./product.routes";
 export { default as BookingRoutes } from "./booking.routes";
+export { default as KiuRoutes } from "./kiu.routes";

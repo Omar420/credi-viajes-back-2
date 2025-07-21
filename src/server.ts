@@ -7,7 +7,7 @@ import { SequelizeStorage, Umzug } from "umzug";
 import { execSync } from "child_process";
 import { getVersion } from "@src/constants/version";
 import { IPathRoutes } from "./types";
-import { AuthRoutes, ClientRoutes, UsersRoutes, UtilRoutes, ProductRoutes, BookingRoutes } from "./routes";
+import { AuthRoutes, ClientRoutes, UsersRoutes, UtilRoutes, ProductRoutes, BookingRoutes, KiuRoutes } from "./routes";
 
 export class Server {
   private app: Application;
@@ -105,6 +105,7 @@ export class Server {
     // routes view
     this.app.use(this.paths.products, ProductRoutes);
     this.app.use(this.paths.bookings, BookingRoutes);
+    this.app.use(this.paths.kiu, KiuRoutes);
     // this.app.use(this.paths.productCategory, ProductCategoryRoutes);
   }
 
