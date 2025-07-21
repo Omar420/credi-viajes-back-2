@@ -20,7 +20,7 @@ module.exports = {
         type: Sequelize.DECIMAL(10, 2),
         allowNull: false,
       },
-      stockQty: {
+      stock_qty: {
         type: Sequelize.INTEGER,
         allowNull: false,
         defaultValue: 0,

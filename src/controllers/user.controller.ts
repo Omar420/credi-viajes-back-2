@@ -2,13 +2,14 @@ import { Request, Response } from "express";
 import { RoleService, UserService } from "@src/services";
 import { encryptData } from "@src/helpers";
 import { ROLES, USER_TYPE } from "@src/constants/config-global";
+import { AuthenticatedRequest } from "@src/types";
 
 const userService = new UserService();
 const roleService = new RoleService();
 
 
 /** POST /api/users/admin */
-export async function createAdmin(req: Request, res: Response) {
+export async function createAdmin(req: AuthenticatedRequest, res: Response) {
     try {
         const { uid } = req;
         const role = await roleService.findRoleByCode(ROLES.ADMIN);
@@ -38,7 +39,7 @@ export async function createAdmin(req: Request, res: Response) {
 }
 
 /** POST /api/users/operator */
-export async function createOperator(req: Request, res: Response) {
+export async function createOperator(req: AuthenticatedRequest, res: Response) {
     try {
         const { uid } = req;
         const role = await roleService.findRoleByCode(ROLES.OPERATOR);
@@ -67,7 +68,7 @@ export async function createOperator(req: Request, res: Response) {
 }
 
 /** GET /api/users/operators?page=&limit= */
-export async function getOperatorsPaginated(req: Request, res: Response) {
+export async function getOperatorsPaginated(req: AuthenticatedRequest, res: Response) {
     try {
         const { query } = req;
 
@@ -90,7 +91,7 @@ export async function getOperatorsPaginated(req: Request, res: Response) {
 }
 
 /** GET /api/users/admins?page=&limit= */
-export async function getAdminsPaginated(req: Request, res: Response) {
+export async function getAdminsPaginated(req: AuthenticatedRequest, res: Response) {
     try {
         const { query } = req;
 
@@ -114,7 +115,7 @@ export async function getAdminsPaginated(req: Request, res: Response) {
 }
 
 /** PATCH /api/users/:id */
-export async function patchUpdateUser(req: Request, res: Response) {
+export async function patchUpdateUser(req: AuthenticatedRequest, res: Response) {
     try {
         const { id } = req.params;
         const { uid, roleCode } = req;

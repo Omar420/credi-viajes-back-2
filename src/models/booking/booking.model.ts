@@ -1,8 +1,9 @@
 import { DataTypes } from "sequelize";
 import sequelize from "@src/config/connection";
 import { ClientModel } from "../clients"; // Asumo que ClientModel está vinculado a UserModel
-import { DestinationsModel, UserModel } from "../shared"; // UserModel para fk_created_by_id
+import { DestinationsModel } from "../shared"; // UserModel para fk_created_by_id
 import { BookingStatusModel } from ".";
+import { UserModel } from "../users";
 
 const Booking = sequelize.define(
     "booking",

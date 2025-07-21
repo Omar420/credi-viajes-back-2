@@ -3,7 +3,7 @@ import { MailService, OTPService, UserService } from ".";
 import { getBCryptCompare } from "@src/helpers";
 import { validateIsEmail } from "@src/utils/validate-is-email";
 import { generatorJWT } from "@src/helpers/generator-jwt";
-import { CONFIG, ROLES } from "@src/constants/config-global";
+import { CONFIG, MAIL, ROLES } from "@src/constants/config-global";
 import { AuthModel } from "@src/models";
 import { AuthCreateEditAttributes, IAuthAttributes, IAuthParams } from "@src/types";
 import { CustomError } from "@src/utils/custom-exception.error";
@@ -200,7 +200,7 @@ export class AuthService {
     public async changePasswordLoggedIn(userId: string, oldPasswordAttempt: string, newPasswordRaw: string): Promise<void> {
         const user = await this.userService.findUserById(userId); // Este método ya incluye 'auth'
         if (!user || !user.auth) {
-            throw new CustomError(ERROR_MESSAGES.USER_NOT_FOUND, 404);
+            throw new CustomError(ERROR_MESSAGES.ERROR_USER_NOT_FOUND, 404);
         }
 
         const authRecord = user.auth;
@@ -210,15 +210,15 @@ export class AuthService {
 
         const isMatch = await getBCryptCompare(oldPasswordAttempt, authRecord.password);
         if (!isMatch) {
-            throw new CustomError(ERROR_MESSAGES.OLD_PASSWORD_INCORRECT, 400);
+            throw new CustomError(ERROR_MESSAGES.ERROR_OLD_PASSWORD_INCORRECT, 400);
         }
 
         // El controlador ya valida la fortaleza y coincidencia de newPasswordRaw
         // La función CONFIG.ENCRYPT_DATA ya debería manejar el hasheo.
         // No es necesario comparar con getBCryptCompare aquí.
-        const newPasswordHash =  CONFIG.ENCRYPT_DATA(newPasswordRaw);
+        // const newPasswordHash =  CONFIG.ENCRYPT_DATA(newPasswordRaw);
         
-        await this.updateAuth(authRecord.id, { password: newPasswordHash, isPasswordCreated: true });
+        await this.updateAuth(authRecord.id, { password: newPasswordRaw, isPasswordCreated: true });
     }
 
     public async requestPasswordReset(email: string): Promise<void> {
@@ -235,8 +235,8 @@ export class AuthService {
         const mailService = new MailService();
         await mailService.sendMail({
             to: authRecord.email,
-            subject: CONFIG.MAIL.SUBJECT.PASSWORD_RESET_OTP || "Tu código para restablecer la contraseña",
-            template: CONFIG.MAIL.TEMPLATES.PASSWORD_RESET_OTP_CODE || "password-reset-otp-code",
+            subject: MAIL.SUBJECT.PASSWORD_RESET_OTP || "Tu código para restablecer la contraseña",
+            template: MAIL.TEMPLATES.PASSWORD_RESET_OTP_CODE || "password-reset-otp-code",
             context: {
                 userName: authRecord.username || authRecord.email.split('@')[0],
                 otpCode: otpRecord.getDataValue("code"),
@@ -248,7 +248,7 @@ export class AuthService {
     public async resetPasswordWithOtp(email: string, otpCode: string, newPasswordRaw: string): Promise<void> {
         const authRecord = await this.findAuthByEmail(email);
         if (!authRecord) {
-            throw new CustomError(ERROR_MESSAGES.OTP_INVALID_OR_EXPIRED, 400);
+            throw new CustomError(ERROR_MESSAGES.ERROR_OTP_INVALID_OR_EXPIRED, 400);
         }
 
         const otpIsValid = await OTPService.verifyEmailOTP(authRecord.id, otpCode, 'password_reset');
@@ -263,8 +263,8 @@ export class AuthService {
         // if (!otpIsValid) throw new CustomError(ERROR_MESSAGES.OTP_INVALID_OR_EXPIRED, 400);
 
 
-        const newPasswordHash = CONFIG.ENCRYPT_DATA(newPasswordRaw);
-        await this.updateAuth(authRecord.id, { password: newPasswordHash, isPasswordCreated: true });
+        // const newPasswordHash = CONFIG.ENCRYPT_DATA(newPasswordRaw);
+        await this.updateAuth(authRecord.id, { password: newPasswordRaw, isPasswordCreated: true });
 
         // Opcional: invalidar el OTP específico si verifyEmailOTP no lo hace (aunque ya lo hace)
         // const otpRecord = await OTPEmailVerificationsModel.findOne({ where: { authId: authRecord.id, code: otpCode, purpose: 'password_reset'} });
@@ -273,8 +273,8 @@ export class AuthService {
         const mailService = new MailService();
         await mailService.sendMail({
             to: authRecord.email,
-            subject: CONFIG.MAIL.SUBJECT.PASSWORD_CHANGED_CONFIRMATION || "Confirmación de Cambio de Contraseña",
-            template: CONFIG.MAIL.TEMPLATES.PASSWORD_CHANGED_CONFIRMATION || "password-changed-confirmation",
+            subject: MAIL.SUBJECT.PASSWORD_CHANGED_CONFIRMATION || "Confirmación de Cambio de Contraseña",
+            template: MAIL.TEMPLATES.PASSWORD_CHANGED_CONFIRMATION || "password-changed-confirmation",
             context: {
                 userName: authRecord.username || authRecord.email.split('@')[0],
             },

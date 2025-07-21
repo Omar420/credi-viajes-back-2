@@ -1,4 +1,5 @@
 import { UserService } from "@src/services";
+import { AuthenticatedRequest } from "@src/types";
 import { Request, Response, NextFunction } from "express";
 
 /**
@@ -6,7 +7,7 @@ import { Request, Response, NextFunction } from "express";
  * Consulta el rol directamente desde la base de datos por seguridad.
  */
 export const checkRole = (allowedRoles: string[]) => {
-    return async (req: Request, res: Response, next: NextFunction) => {
+    return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
         try {
             const uid = req.uid;
 
@@ -43,3 +44,4 @@ export const checkRole = (allowedRoles: string[]) => {
         }
     };
 };
+

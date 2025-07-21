@@ -6,5 +6,18 @@ export interface IPathRoutes {
   utils: string;
   clients: string;
   products: string;
-  productCategory: string;
+  // productCategory: string;
+  bookings: string;
+  // bookingPassengers: string;
+  // bookingStatus: string;
+  // addresses: string;
+  // clientsAddresses: string;
+  // passengers: string;
+  // documentTypes: string;
+  // documents: string;
+  // categories: string; 
+  // packagesProducts: string;
+  // packages: string;
+  // destinations: string;
+  // roles: string;
 }

@@ -1,0 +1,37 @@
+@HOST = http://e4cc84ssk88o0gk0ggk8ok4o.192.95.40.150.sslip.io/api
+@API_KEY = GcE9Rfrw9D37fzN6LkOT6y
+@INT = 87996b9c-b5c8-4943-a204-1a9821eb0914
+
+
+POST {{HOST}}/kiu/availability-flights?integrationID={{INT}}
+Content-Type: application/json
+x-api-key: {{API_KEY}}
+
+{
+  "adults": 1,
+  "children": 0,
+  "infants": 0,
+  "origin": "CCS",
+  "destination": "VIG",
+  "departure_date": "2025-07-20",
+  "return_date": "2025-07-25"
+}
+
+
+###
+
+POST {{HOST}}/kiu/smart-search?integrationID={{INT}}
+Content-Type: application/json
+x-api-key: {{API_KEY}}
+
+{
+  "adults": 1,
+  "children": 0,
+  "infants": 0,
+  "origin": "CCS",
+  "destination": "VIG",
+  "departure_date": "2025-07-20",
+  "return_date": "2025-07-25",
+  "flight_numbers": ["1924", "1925"],
+  "carrier": "QL"
+} 

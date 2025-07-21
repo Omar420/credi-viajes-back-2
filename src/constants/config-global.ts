@@ -34,7 +34,21 @@ export const PATH_ROUTES: IPathRoutes = {
   utils: "/api/utils",
   clients: "/api/client",
   products: "/api/products",
-  productCategory: "/api/product-category",
+  // productCategory: "/api/product-category",
+  // observe list
+  bookings: "/api/bookings",
+  // bookingPassengers: "/api/booking-passengers",
+  // bookingStatus: "/api/booking-status",
+  // addresses: "/api/addresses",
+  // clientsAddresses: "/api/clients-addresses",
+  // passengers: "/api/passengers",
+  // documentTypes: "/api/document-types",
+  // documents: "/api/documents",
+  // categories: "/api/categories",
+  // packagesProducts: "/api/packages-products",
+  // packages: "/api/packages",
+  // destinations: "/api/destinations",
+  // roles: "/api/roles",
 }
 
 export const USER_TYPE = {

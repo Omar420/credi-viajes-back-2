@@ -7,13 +7,13 @@ import { validateIsEmail } from "@src/utils/validate-is-email";
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 
-import { AuthModel, OtpEmailVerificationModel, UserModel } from "@src/models";
+import { AuthModel, OTPEmailVerificationsModel, UserModel } from "@src/models";
 import { MailService } from "@src/services/mail.service"; 
-import { generateSixDigitCode } from "@src/utils"; 
 import { AuthenticatedRequest } from "@src/types"; 
 // Se importa CONFIG como GlobalConfig para evitar colisión con la variable CONFIG ya importada en la parte superior del archivo.
-import { CONFIG as GlobalConfig, MAIL_TEMPLATES, MAIL as GlobalMail } from "@src/constants/config-global"; 
+import { CONFIG as GlobalConfig, MAIL as GlobalMail } from "@src/constants/config-global"; 
 import { SUCCESS_MESSAGES as SM, ERROR_MESSAGES as EM } from "@src/constants/messages.global";
+import { generateSixDigitCode } from "@src/utils/generate-six-digit-code";
 
 
 /**
@@ -94,7 +94,7 @@ const isPasswordStrong = (password: string): boolean => {
 
 export const changePasswordLoggedInHandler = async (req: AuthenticatedRequest, res: Response) => {
     const { oldPassword, newPassword, confirmNewPassword } = req.body;
-    const userId = req.user?.id; 
+    const userId = req.userId; 
 
     if (!userId) {
         return res.status(401).json({ message: EM.ERROR_UNAUTHORIZED_ACCESS });
@@ -165,12 +165,12 @@ export const forgotPasswordRequestHandler = async (req: Request, res: Response) 
         const otpCode = generateSixDigitCode();
         const expiresAt = new Date(Date.now() + GlobalConfig.OTP_EXPIRATION_MINUTES * 60 * 1000);
 
-         await OtpEmailVerificationModel.update(
+         await OTPEmailVerificationsModel.update(
             { used: true },
             { where: { authId: authRecord.id, used: false /*, purpose: 'password_reset' */ } } 
         );
 
-        await OtpEmailVerificationModel.create({
+        await OTPEmailVerificationsModel.create({
             authId: authRecord.id,
             code: otpCode,
             expiresAt,
@@ -198,7 +198,7 @@ export const forgotPasswordRequestHandler = async (req: Request, res: Response) 
     }
 };
 
-export const resetPasswordWithTokenHandler = async (req: Request, res: Response) => {
+export const resetPasswordWithTokenHandler = async (req: AuthenticatedRequest, res: Response) => {
     const { email, token, newPassword, confirmNewPassword } = req.body;
 
     if (!email || !validateIsEmail(email)) {
@@ -223,12 +223,11 @@ export const resetPasswordWithTokenHandler = async (req: Request, res: Response)
             return res.status(400).json({ message: EM.ERROR_OTP_INVALID_OR_EXPIRED });
         }
 
-        const otpEntry = await OtpEmailVerificationModel.findOne({
+        const otpEntry = await OTPEmailVerificationsModel.findOne({
             where: {
                 authId: authRecord.id,
                 code: token,
                 used: false,
-                // purpose: 'password_reset' 
             },
         });
 
@@ -236,20 +235,36 @@ export const resetPasswordWithTokenHandler = async (req: Request, res: Response)
             return res.status(400).json({ message: EM.ERROR_OTP_INVALID_OR_EXPIRED });
         }
 
-        if (new Date() > otpEntry.expiresAt) {
-            await otpEntry.update({ used: true }); 
+        // Solución para expiresAt - usar get()
+        const expiresAt = otpEntry.get('expiresAt') as Date | string | number | null;
+        if (!expiresAt || new Date() > new Date(expiresAt)) {
+            await OTPEmailVerificationsModel.update({ used: true }, { where: { id: otpEntry.get('id') } });
             return res.status(400).json({ message: EM.ERROR_OTP_INVALID_OR_EXPIRED });
         }
 
         const hashedNewPassword = encryptData(newPassword);
-        await authRecord.update({ password: hashedNewPassword, isPasswordCreated: true });
-        await otpEntry.update({ used: true }); 
+        
+        // Solución para update - usar el modelo directamente
+        await AuthModel.update(
+            { 
+                password: hashedNewPassword, 
+                isPasswordCreated: true 
+            },
+            { 
+                where: { id: authRecord.id } 
+            }
+        );
+        
+        await OTPEmailVerificationsModel.update(
+            { used: true },
+            { where: { id: otpEntry.get('id') } }
+        );
         
         const mailService = new MailService();
         await mailService.sendMail({
             to: authRecord.email,
             subject: GlobalMail.SUBJECT.PASSWORD_CHANGED_CONFIRMATION || "Confirmación de Cambio de Contraseña", 
-            template: MAIL_TEMPLATES.PASSWORD_CHANGED_CONFIRMATION || "password-changed-confirmation", 
+            template: MAIL.TEMPLATES.PASSWORD_CHANGED_CONFIRMATION || "password-changed-confirmation", 
             context: {
                 userName: authRecord.username || authRecord.email.split('@')[0],
             }
@@ -262,13 +277,12 @@ export const resetPasswordWithTokenHandler = async (req: Request, res: Response)
         return res.status(500).json({ message: EM.ERROR_INTERNAL_SERVER, error: error.message });
     }
 };
-
 /** =============================== CLient =================================*/
 
 const authService = new AuthService();
 
 
-export async function loginHandler(req: Request, res: Response) {
+export async function loginHandler(req: AuthenticatedRequest, res: Response) {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) return res.status(400).json({
@@ -316,7 +330,7 @@ export async function refreshTokenHandler(req: Request, res: Response) {
     }
 }
 
-export async function verifyEmailOTPHandler(req: Request, res: Response) {
+export async function verifyEmailOTPHandler(req: AuthenticatedRequest, res: Response) {
     try {
         const { authId, email } = req;
         const { verifyCode } = req.body;
@@ -330,16 +344,15 @@ export async function verifyEmailOTPHandler(req: Request, res: Response) {
 
         await authService.verifyEmailOTP(authId, verifyCode);
 
-        return res.status(200).json(
-            {
-                headerTitle: "Verificación de correo electrónico",
-                title: "Felicidades",
-                message: `Tu correo electrónico ${email} se ha vinculado a tu cuenta. Ahora puedes usar esta dirección para inciar sesión.`,
-                action: {
-                    buttonText: "Continuar",
-                    buttonCallback: "CreatePassword"
-                }
-            });
+        return res.status(200).json({
+            headerTitle: "Verificación de correo electrónico",
+            title: "Felicidades",
+            message: `Tu correo electrónico ${email} se ha vinculado a tu cuenta. Ahora puedes usar esta dirección para inciar sesión.`,
+            action: {
+                buttonText: "Continuar",
+                buttonCallback: "CreatePassword"
+            }
+        });
 
     } catch (err: any) {
         const code = err.statusCode || 500;

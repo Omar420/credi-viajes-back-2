@@ -31,14 +31,21 @@ Authorization: Bearer {{TOKEN}}
     "name": "Laptop Gamer Pro",
     "description": "Laptop de última generación para gaming",
     "amount": 1500.99,
-    "stockQty": 10,
-    "fk_category_id": "poner_id_categoria_existente_aqui" 
+    "stock_qty": 10,
+    "fk_category_id": "3510ff7d-1318-450a-9f22-a932cd64636f" 
     // Asegúrate de que el fk_created_by_id y fk_updated_by_id se manejen automáticamente o se pasen si es necesario
 }
+
+### Get test products
+# @name getAllProducts
+GET {{HOST}}{{product_api_path}}/test
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
 
 ### Get all products
 # @name getAllProducts
 GET {{HOST}}{{product_api_path}}
+Content-Type: application/json
 Authorization: Bearer {{TOKEN}}
 
 ### Get product by ID
@@ -56,7 +63,7 @@ Authorization: Bearer {{TOKEN}}
     "name": "Laptop Gamer Pro X",
     "description": "Laptop de última generación para gaming y trabajo",
     "amount": 1600.50,
-    "stockQty": 8
+    "stock_qty": 8
     // fk_updated_by_id se debería manejar automáticamente
 }
 

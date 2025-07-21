@@ -1,4 +1,4 @@
-import { IPassengerDataInput, IPassengerDetails, IPassengerSummary } from "./passenger.type";
+import { IPassengerDataInput,  IPassengerSummary } from "./passenger.type";
 import { 
     IBookingStatusSummary, 
     IClientSummary, 
@@ -6,6 +6,7 @@ import {
     IUserSummary 
 } from "./shared.type";
 
+// In your @src/types/booking.type.ts file
 export interface IBookingCreationPayload {
     name?: string; 
     description?: string; 
@@ -21,6 +22,13 @@ export interface IBookingCreationPayload {
     passengers: IPassengerDataInput[]; 
 }
 
+export interface IBookingServiceCreatePayload extends IBookingCreationPayload {
+    fk_client_id: string;
+    passengerCount: number;
+    fk_created_by_id: string;
+    fk_updated_by_id: string;
+}
+
 export interface IBookingUpdatePayload {
     name?: string;
     description?: string;
@@ -33,6 +41,8 @@ export interface IBookingUpdatePayload {
     fk_origin_id?: string; 
     fk_destination_id?: string; 
 }
+
+// ... rest of your types remain the same
 
 export interface IBookingBase { // Campos comunes entre Details y Summary
     id: string;
@@ -68,7 +78,7 @@ export interface IBookingDetails extends IBookingBase {
     client?: IClientSummary;
     createdBy?: IUserSummary;
     updatedBy?: IUserSummary;
-    passengers?: IPassengerDetails[]; // Array de pasajeros con todos sus detalles
+    // passengers?: IPassengerDetails[]; // Array de pasajeros con todos sus detalles
 }
 
 export interface IBookingSummary extends IBookingBase {
@@ -78,3 +88,46 @@ export interface IBookingSummary extends IBookingBase {
     // No incluiríamos createdBy, updatedBy, client, o lista detallada de pasajeros aquí
     // a menos que sea explícitamente necesario para el resumen.
 }
+
+// Represents the direct attributes of the BookingModel, often used by services
+export interface IBookingAttributes {
+    id: string;
+    name?: string | null;
+    description?: string | null;
+    price?: number | null;
+    totalAmount: number;
+    passengerCount: number;
+    paymentSuccessful: boolean;
+    bookingReference: string;
+    notes?: string | null;
+    departureDate: Date; // Model uses DATE, service might return as Date object
+    returnDate?: Date | null;
+    deleted: boolean;
+    fk_status_id: string;
+    fk_origin_id: string;
+    fk_destination_id: string;
+    fk_client_id: string;
+    fk_created_by_id: string;
+    fk_updated_by_id: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+
+    // Optional populated associations, matching service includes
+    status?: IBookingStatusSummary; // Or full IBookingStatusAttributes if needed
+    origin?: IDestinationSummary;   // Or full IDestinationAttributes
+    destination?: IDestinationSummary; // Or full IDestinationAttributes
+    client?: IClientSummary;       // Or full IClientAttributes
+    createdBy?: IUserSummary;      // Or full IUserAttributes
+    updatedBy?: IUserSummary;      // Or full IUserAttributes
+    // passengers?: IPassengerDetails[]; // Array of IPassengerDetails
+}
+
+// For BookingService.createBooking method - data strictly for the Booking table
+export type ICoreBookingCreationPayload = Omit<IBookingCreationPayload, 'passengers'> & {
+    fk_client_id: string;
+    passengerCount: number;
+    // Ensure all fields expected by BookingModel.create are here, minus what service auto-generates (like bookingReference)
+    // Add audit fields if they are passed from controller to service create method
+    fk_created_by_id: string;
+    fk_updated_by_id: string;
+};
