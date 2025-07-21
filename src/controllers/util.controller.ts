@@ -29,7 +29,7 @@ export async function getBookingConstants(req: Request, res: Response) {
             DOC_TYPES_KIU,
             DOCUMENTS_TYPE,
             BOOKING,
-        } = await import('@src/constants/booking.constants');
+        } = await import('@src/constants/utils.constants');
 
         return res.status(200).json({
             status: 'success',
