@@ -28,8 +28,9 @@ router.post(
             .matches(/^\+[1-9]\d{0,2}$/)
             .withMessage("El prefijo debe tener el formato +<código internacional> (1–3 dígitos, sin ceros iniciales)"),
         check("countryPrefix").notEmpty(),
-        check("phoneNumber").isMobilePhone("any"),
-        validateFieldsMiddleware
+        validateFieldsMiddleware,
+        // check("phoneNumber").isMobilePhone("any"),
+        // validateFieldsMiddleware
     ],
     sendPhoneHandler
 );
