@@ -1,109 +1,142 @@
-@HOST=http://localhost:4050/api
+@HOST = https://qa.back.creditviajes.com/api
+@API_KEY = cfrw9D3kOE9RT6yG
+@TOKEN = YOUR_LOGIN_TOKEN
 
-@TOKEN=YOUR_AUTH_TOKEN
-@API_KEY=YOUR_API_KEY
+###
+# --------------------------------------------------------------------------------------
+# BOOKING REQUESTS
+# --------------------------------------------------------------------------------------
+# This file contains examples for creating bookings.
+#
+# IMPORTANT:
+# - The `Authorization` header must contain a valid JWT token obtained from logging in.
+# - The `x-api-key` is a static key for the application.
+# - The `representative` field in the passengers array is ONLY required for infants (`INFT`).
+#   It should contain the `foid_id` of the accompanying adult.
+# - `order: 1` represents a one-way trip.
+# - `order: 2` represents the return flight for a round-trip.
+#
+# --------------------------------------------------------------------------------------
 
-@userId=c4484fe1-fa5e-4315-9e0b-60a29e481ec7
-@clientId=c4484fe1-fa5e-4315-9e0b-60a29e481ec7
-@statusId=fc6bfcb3-41da-4a06-9d8d-e5b00e1aabf2
-@originId=57330fd9-fd79-4d4f-ac19-279d406bc864
-@destinationId=5b349b92-8e60-489b-b12a-0ebc3fd8291a
-@genderId=fc6bfcb3-41da-4a06-9d8d-e5b00e1aabf2
-@countryId=57330fd9-fd79-4d4f-ac19-279d406bc864
-@docTypeId=5b349b92-8e60-489b-b12a-0ebc3fd8291a
-
-### Create a new booking
-# @name createBooking
+### Create a One-Way Booking (Adult only)
+# @name createOneWayBooking
 POST {{HOST}}/bookings
 Content-Type: application/json
 Authorization: Bearer {{TOKEN}}
+x-api-key: {{API_KEY}}
 
 {
-    "name": "Booking for trip to the beach",
-    "description": "Family vacation",
-    "totalAmount": 1200.50,
-    "paymentSuccessful": false,
-    "notes": "Requires special assistance for one passenger",
-    "departureDate": "2025-08-15T10:00:00.000Z",
-    "returnDate": "2025-08-22T18:00:00.000Z",
-    "fk_status_id": "{{statusId}}",
-    "fk_origin_id": "{{originId}}",
-    "fk_destination_id": "{{destinationId}}",
-    "fk_client_id": "{{clientId}}",
-    "passengerCount": 2,
-    "passengers": [
-        {
-            "firstSurname": "Doe",
-            "firstName": "John",
-            "middleName": "A.",
-            "secondSurname": "Smith",
-            "fk_gender_id": "{{genderId}}",
-            "dateOfBirth": "1990-05-15",
-            "fk_nationality_country_id": "{{countryId}}",
-            "fk_doc_type_id": "{{docTypeId}}",
-            "documentNumber": "A12345678",
-            "passengerType": "adult"
-        },
-        {
-            "firstSurname": "Doe",
-            "firstName": "Jane",
-            "middleName": "B.",
-            "secondSurname": "Smith",
-            "fk_gender_id": "{{genderId}}",
-            "dateOfBirth": "1992-08-20",
-            "fk_nationality_country_id": "{{countryId}}",
-            "fk_doc_type_id": "{{docTypeId}}",
-            "documentNumber": "B87654321",
-            "passengerType": "adult"
-        }
-    ]
+  "email": "test.adult@example.com",
+  "phone": "+11234567890",
+  "countryCode": "US",
+  "carrier": "QL",
+  "passengers": [
+    {
+      "surname": "WAYNE",
+      "name": "BRUCE",
+      "gender": "M",
+      "foid_type": "ID",
+      "document_type": "I",
+      "foid_id": "987654321",
+      "date_of_birth": "30MAR85",
+      "passenger_type_code": "ADT",
+      "nationality": "US",
+      "issue_country": "US",
+      "expiration_date": "30MAR30"
+    }
+  ],
+  "air_itinerary_information": [
+    {
+      "order": 1,
+      "departure_information": {
+        "location_code": "JFK",
+        "date": "2025-09-10",
+        "time": "0800"
+      },
+      "arrival_information": {
+        "location_code": "LAX"
+      },
+      "flight_number": 2025,
+      "reservation_booking_designator_code": "N",
+      "number_in_party": 1,
+      "carrier": "QL"
+    }
+  ]
 }
 
-### Get all bookings
-# @name getAllBookings
-GET {{HOST}}/bookings/all
-Authorization: Bearer {{TOKEN}}
+### --------------------------------------------------------------------------------------
 
-### Get booking by ID
-# @name getBookingById
-GET {{HOST}}/bookings/{{createBooking.response.body.id}}
-Authorization: Bearer {{TOKEN}}
-
-### Get bookings by client ID
-# @name getBookingsByClientId
-GET {{HOST}}/bookings/client/{{clientId}}
-Authorization: Bearer {{TOKEN}}
-
-### Update a booking
-# @name updateBooking
-PUT {{HOST}}/bookings/{{createBooking.response.body.id}}
+### Create a Round-Trip Booking (Adult and Infant)
+# @name createRoundTripBookingWithInfant
+POST {{HOST}}/bookings
 Content-Type: application/json
 Authorization: Bearer {{TOKEN}}
+x-api-key: {{API_KEY}}
 
 {
-    "name": "Updated booking for trip to the mountains",
-    "description": "Updated family vacation",
-    "totalAmount": 1500.75,
-    "notes": "All passengers are confirmed"
+  "email": "test.infant@example.com",
+  "phone": "+442071234567",
+  "countryCode": "GB",
+  "carrier": "QL",
+  "passengers": [
+    {
+      "surname": "KENT",
+      "name": "CLARK",
+      "gender": "M",
+      "foid_type": "PP",
+      "document_type": "P",
+      "foid_id": "A1B2C3D4E5",
+      "date_of_birth": "29FEB80",
+      "passenger_type_code": "ADT",
+      "nationality": "GB",
+      "issue_country": "GB",
+      "expiration_date": "29FEB28"
+    },
+    {
+      "surname": "KENT",
+      "name": "JONATHAN",
+      "gender": "M",
+      "foid_type": "ID",
+      "document_type": "I",
+      "foid_id": "F6G7H8I9J0",
+      "date_of_birth": "15JUN23",
+      "passenger_type_code": "INFT",
+      "nationality": "GB",
+      "issue_country": "GB",
+      "expiration_date": "15JUN33",
+      "representative": "A1B2C3D4E5"
+    }
+  ],
+  "air_itinerary_information": [
+    {
+      "order": 1,
+      "departure_information": {
+        "location_code": "LHR",
+        "date": "2025-10-20",
+        "time": "1130"
+      },
+      "arrival_information": {
+        "location_code": "CDG"
+      },
+      "flight_number": 1810,
+      "reservation_booking_designator_code": "Y",
+      "number_in_party": 2,
+      "carrier": "QL"
+    },
+    {
+      "order": 2,
+      "departure_information": {
+        "location_code": "CDG",
+        "date": "2025-10-27",
+        "time": "1500"
+      },
+      "arrival_information": {
+        "location_code": "LHR"
+      },
+      "flight_number": 1811,
+      "reservation_booking_designator_code": "Y",
+      "number_in_party": 2,
+      "carrier": "QL"
+    }
+  ]
 }
-
-### Update booking status
-# @name updateBookingStatus
-PATCH {{HOST}}/bookings/{{createBooking.response.body.id}}/status
-Content-Type: application/json
-Authorization: Bearer {{TOKEN}}
-
-{
-    "fk_status_id": "another-status-id",
-    "paymentSuccessful": true
-}
-
-### Cancel a booking
-# @name cancelBooking
-PUT {{HOST}}/bookings/{{createBooking.response.body.id}}/cancel
-Authorization: Bearer {{TOKEN}}
-
-### Delete a booking
-# @name deleteBooking
-DELETE {{HOST}}/bookings/{{createBooking.response.body.id}}
-Authorization: Bearer {{TOKEN}}
