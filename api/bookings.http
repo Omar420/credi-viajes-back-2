@@ -140,3 +140,11 @@ x-api-key: {{API_KEY}}
     }
   ]
 }
+
+
+
+
+###
+I/flutter (19141): 📤 Enviando POST a: https://qa.back.creditviajes.com/api/booking
+I/flutter (19141): 📦 Body: {"email":"ogalindez420@gmail.com","phone":"4125551654","countryCode":"VE","carrier":"QL","passengers":[{"surname":"galindez","name":"Omar","gender":"M","foid_type":"ID","document_type":"I","foid_id":"26386392","date_of_birth":"25JUL02","passenger_type_code":"INFT","nationality":"VE","issue_country":"VE","expiration_date":"27DEC25"}],"air_itinerary_information":[]}
+I/flutter (19141): 🧾 Headers: {Content-Type: application/json, x-api-key: cfrw9D3kOE9RT6yG, Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJlMTU0YzdiMy02ZjM1LTQxYmEtODcxMy1lMmEyOGFiMTcwNmMiLCJpYXQiOjE3NTM0NzMxNjksImV4cCI6MTc1MzQ5MTE2OX0.NqPvJ8Wh6DhyZTyyXkZ2OXzjJ46aOFgLDjngsaVpJnU}

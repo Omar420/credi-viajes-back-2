@@ -1,7 +1,7 @@
 export const PASSENGER_TYPE = {
-  ADULT: 'ADT',
-  CHILD: 'CHD',
-  INFANT: 'INFT',
+  ADULT: 'ADT', // ADULTO
+  CHILD: 'CHD', // NIÑO
+  INFANT: 'INFT', // INFANTE
 };
 
 export const FOID_TYPES_KIU = {
