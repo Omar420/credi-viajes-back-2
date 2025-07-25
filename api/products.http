@@ -1,76 +1,48 @@
 @HOST=http://localhost:4050/api
 
-@TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoSWQiOiI1MzczZThhMC00ZmU0LTQ4OGMtOWFkZi1jMjE3ODRhNTFhMTIiLCJpYXQiOjE3NDY1Njc5MzYsImV4cCI6MTc0NjU4NTkzNn0.2uuBOcBy9mRwzOuZ9T9kPlDYGhkz6oRdIHPsa2l7wzg
+@TOKEN=YOUR_AUTH_TOKEN
+@API_KEY=YOUR_API_KEY
 
-@API_KEY = cfrw9D3kOE9RT6yG
-
-@userId=ID_DEL_USUARIO_AUTENTICADO
-
-@targetId=ID_DEL_USUARIO_A_MODIFICAR
-
-# Masculino
-@gender_id=fc6bfcb3-41da-4a06-9d8d-e5b00e1aabf2
-
-@country_id=57330fd9-fd79-4d4f-ac19-279d406bc864
-
-@state_id=5b349b92-8e60-489b-b12a-0ebc3fd8291a
-
-# Administrador
-@roleId=51b81465-e6a2-4167-a053-4a8b35f2834a
-@product_api_path = /products
-
-### ------------------------- PRODUCTS ------------------------- ###
+@categoryId=3510ff7d-1318-450a-9f22-a932cd64636f
 
 ### Create a new product
 # @name createProduct
-POST {{HOST}}{{product_api_path}}
+POST {{HOST}}/products
 Content-Type: application/json
 Authorization: Bearer {{TOKEN}}
 
 {
-    "name": "Laptop Gamer Pro",
-    "description": "Laptop de última generación para gaming",
-    "amount": 1500.99,
-    "stock_qty": 10,
-    "fk_category_id": "3510ff7d-1318-450a-9f22-a932cd64636f" 
-    // Asegúrate de que el fk_created_by_id y fk_updated_by_id se manejen automáticamente o se pasen si es necesario
+    "name": "Gaming Laptop",
+    "description": "High-performance laptop for gaming",
+    "amount": 2500.00,
+    "stock_qty": 15,
+    "fk_category_id": "{{categoryId}}"
 }
-
-### Get test products
-# @name getAllProducts
-GET {{HOST}}{{product_api_path}}/test
-Content-Type: application/json
-Authorization: Bearer {{TOKEN}}
 
 ### Get all products
 # @name getAllProducts
-GET {{HOST}}{{product_api_path}}
-Content-Type: application/json
+GET {{HOST}}/products
 Authorization: Bearer {{TOKEN}}
 
 ### Get product by ID
 # @name getProductById
-GET {{HOST}}{{product_api_path}}/poner_id_producto_aqui
+GET {{HOST}}/products/{{createProduct.response.body.id}}
 Authorization: Bearer {{TOKEN}}
 
 ### Update a product
 # @name updateProduct
-PUT {{HOST}}{{product_api_path}}/poner_id_producto_aqui
+PUT {{HOST}}/products/{{createProduct.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{TOKEN}}
 
 {
-    "name": "Laptop Gamer Pro X",
-    "description": "Laptop de última generación para gaming y trabajo",
-    "amount": 1600.50,
-    "stock_qty": 8
-    // fk_updated_by_id se debería manejar automáticamente
+    "name": "Gaming Laptop Pro",
+    "description": "Upgraded high-performance laptop for gaming",
+    "amount": 2800.50,
+    "stock_qty": 10
 }
 
 ### Delete a product
 # @name deleteProduct
-DELETE {{HOST}}{{product_api_path}}/poner_id_producto_aqui
+DELETE {{HOST}}/products/{{createProduct.response.body.id}}
 Authorization: Bearer {{TOKEN}}
-
-### Separador para organizar visualmente en VS Code (Rest Client)
-###

@@ -1,177 +1,109 @@
 @HOST=http://localhost:4050/api
 
-@TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJjNDQ4NGZlMS1mYTVlLTQzMTUtOWUwYi02MGEyOWU0ODFlYzciLCJpYXQiOjE3NTE5MDU2MTYsImV4cCI6MTc1MTkyMzYxNn0.zLncsW8wgLK7-vS-mBcn0IE9eW73KOg0fsF8ue3_kUI
+@TOKEN=YOUR_AUTH_TOKEN
+@API_KEY=YOUR_API_KEY
 
-@API_KEY = cfrw9D3kOE9RT6yG
-
-@userId=ID_DEL_USUARIO_AUTENTICADO
-
-@targetId=ID_DEL_USUARIO_A_MODIFICAR
-
-# Masculino
-@gender_id=fc6bfcb3-41da-4a06-9d8d-e5b00e1aabf2
-
-@country_id=57330fd9-fd79-4d4f-ac19-279d406bc864
-
-@state_id=5b349b92-8e60-489b-b12a-0ebc3fd8291a
-
-# Administrador
-@roleId=51b81465-e6a2-4167-a053-4a8b35f2834a
-@booking_api_path = /bookings
-# @token = {{auth.response.body.data.token}} # Para usuario normal/cliente
-@admin_token = {{TOKEN}}
-#  {{auth_admin.response.body.data.token}} # Para usuario admin - Asume una request 'auth_admin' en auth.http
-@user_token = {{TOKEN}}
-#  {{auth_user.response.body.data.token}} # Para un usuario cliente - Asume una request 'auth_user' en auth.http
-
-# Necesitarás IDs válidos de tu base de datos para:
-@origin_id = "poner_fk_origin_id_valido_aqui" # ej: ID de un DestinationModel
-@destination_id = "poner_fk_destination_id_valido_aqui" # ej: ID de un DestinationModel
-@gender_id = "poner_fk_gender_id_valido_aqui" # ej: ID de un GenderModel
-@nationality_id = "poner_fk_nationality_country_id_valido_aqui" # ej: ID de un CountriesModel
-@doc_type_id = "poner_fk_doc_type_id_valido_aqui" # ej: ID de un DocumentTypesModel
-@status_pending_id = "poner_id_status_pending_aqui" # ej: ID de BookingStatusModel para 'PENDING'
-@status_confirmed_id = "poner_id_status_confirmed_aqui" # ej: ID de BookingStatusModel para 'CONFIRMED'
-@status_cancelled_id = "poner_id_status_cancelled_aqui" # ej: ID de BookingStatusModel para 'CANCELLED'
-
-
-### ------------------------- BOOKINGS (Cliente/Usuario) ------------------------- ###
+@userId=c4484fe1-fa5e-4315-9e0b-60a29e481ec7
+@clientId=c4484fe1-fa5e-4315-9e0b-60a29e481ec7
+@statusId=fc6bfcb3-41da-4a06-9d8d-e5b00e1aabf2
+@originId=57330fd9-fd79-4d4f-ac19-279d406bc864
+@destinationId=5b349b92-8e60-489b-b12a-0ebc3fd8291a
+@genderId=fc6bfcb3-41da-4a06-9d8d-e5b00e1aabf2
+@countryId=57330fd9-fd79-4d4f-ac19-279d406bc864
+@docTypeId=5b349b92-8e60-489b-b12a-0ebc3fd8291a
 
 ### Create a new booking
 # @name createBooking
-POST {{HOST}}{{booking_api_path}}
+POST {{HOST}}/bookings
 Content-Type: application/json
 Authorization: Bearer {{TOKEN}}
 
 {
-    "departureDate": "2024-12-15T10:00:00.000Z",
-    "returnDate": "2024-12-20T18:00:00.000Z",
-    "fk_origin_id": "{{origin_id}}",
-    "fk_destination_id": "{{destination_id}}",
-    "totalAmount": 250.75, // Opcional, o se calcula en backend
-    "name": "Viaje de Navidad a la Playa",
-    "notes": "Llevar bloqueador solar y sombrero.",
+    "name": "Booking for trip to the beach",
+    "description": "Family vacation",
+    "totalAmount": 1200.50,
+    "paymentSuccessful": false,
+    "notes": "Requires special assistance for one passenger",
+    "departureDate": "2025-08-15T10:00:00.000Z",
+    "returnDate": "2025-08-22T18:00:00.000Z",
+    "fk_status_id": "{{statusId}}",
+    "fk_origin_id": "{{originId}}",
+    "fk_destination_id": "{{destinationId}}",
+    "fk_client_id": "{{clientId}}",
+    "passengerCount": 2,
     "passengers": [
         {
-            "firstName": "Juan",
-            "firstSurname": "Perez",
-            "middleName": "Carlos",
-            "fk_gender_id": "{{gender_id}}",
-            "dateOfBirth": "1985-05-10",
-            "fk_nationality_country_id": "{{nationality_id}}",
-            "fk_doc_type_id": "{{doc_type_id}}",
-            "documentNumber": "AB1234567",
+            "firstSurname": "Doe",
+            "firstName": "John",
+            "middleName": "A.",
+            "secondSurname": "Smith",
+            "fk_gender_id": "{{genderId}}",
+            "dateOfBirth": "1990-05-15",
+            "fk_nationality_country_id": "{{countryId}}",
+            "fk_doc_type_id": "{{docTypeId}}",
+            "documentNumber": "A12345678",
             "passengerType": "adult"
         },
         {
-            "firstName": "Ana",
-            "firstSurname": "Gomez",
-            "fk_gender_id": "{{gender_id}}",
-            "dateOfBirth": "2015-10-20",
-            "fk_nationality_country_id": "{{nationality_id}}",
-            "fk_doc_type_id": "{{doc_type_id}}",
-            "documentNumber": "CD8901234",
-            "passengerType": "child"
+            "firstSurname": "Doe",
+            "firstName": "Jane",
+            "middleName": "B.",
+            "secondSurname": "Smith",
+            "fk_gender_id": "{{genderId}}",
+            "dateOfBirth": "1992-08-20",
+            "fk_nationality_country_id": "{{countryId}}",
+            "fk_doc_type_id": "{{docTypeId}}",
+            "documentNumber": "B87654321",
+            "passengerType": "adult"
         }
     ]
 }
 
-### Get user's bookings
-# @name getUserBookings
-GET {{HOST}}{{booking_api_path}}
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJjNDQ4NGZlMS1mYTVlLTQzMTUtOWUwYi02MGEyOWU0ODFlYzciLCJpYXQiOjE3NTE5MTczODcsImV4cCI6MTc1MTkzNTM4N30.TLHlWAb-qPs11UDxiKXB7lJbRnElSe53vAp5RbZQBCE
-
-### Get a specific booking by ID (Usuario/Cliente)
-# @name getBookingByIdUser
-# Suponiendo que {{createBooking.response.body.data.id}} tiene el ID de la reserva creada
-GET {{HOST}}{{booking_api_path}}/{{createBooking.response.body.data.id}}
+### Get all bookings
+# @name getAllBookings
+GET {{HOST}}/bookings/all
 Authorization: Bearer {{TOKEN}}
 
-### Cancel a booking (Usuario/Cliente)
-# @name cancelBookingUser
-PUT {{HOST}}{{booking_api_path}}/{{createBooking.response.body.data.id}}/cancel
+### Get booking by ID
+# @name getBookingById
+GET {{HOST}}/bookings/{{createBooking.response.body.id}}
 Authorization: Bearer {{TOKEN}}
 
-
-### ------------------------- BOOKINGS (Admin) ------------------------- ###
-
-### Get all bookings (Admin)
-# @name getAllBookingsAdmin
-GET {{HOST}}{{booking_api_path}}/all
+### Get bookings by client ID
+# @name getBookingsByClientId
+GET {{HOST}}/bookings/client/{{clientId}}
 Authorization: Bearer {{TOKEN}}
 
-
-### Get a specific booking by ID (Admin)
-# @name getBookingByIdAdmin
-# Suponiendo que {{createBooking.response.body.data.id}} tiene el ID de una reserva existente
-GET {{HOST}}{{booking_api_path}}/{{createBooking.response.body.data.id}}
-Authorization: Bearer {{TOKEN}}
-
-### Update booking status (Admin)
-# @name updateBookingStatusAdmin
-PATCH {{HOST}}{{booking_api_path}}/{{createBooking.response.body.data.id}}/status
+### Update a booking
+# @name updateBooking
+PUT {{HOST}}/bookings/{{createBooking.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{TOKEN}}
 
 {
-    "fk_status_id": "{{status_confirmed_id}}",
+    "name": "Updated booking for trip to the mountains",
+    "description": "Updated family vacation",
+    "totalAmount": 1500.75,
+    "notes": "All passengers are confirmed"
+}
+
+### Update booking status
+# @name updateBookingStatus
+PATCH {{HOST}}/bookings/{{createBooking.response.body.id}}/status
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+
+{
+    "fk_status_id": "another-status-id",
     "paymentSuccessful": true
 }
 
-### Cancel a booking (Admin)
-# @name cancelBookingAdmin
-PUT {{HOST}}{{booking_api_path}}/{{createBooking.response.body.data.id}}/cancel
+### Cancel a booking
+# @name cancelBooking
+PUT {{HOST}}/bookings/{{createBooking.response.body.id}}/cancel
 Authorization: Bearer {{TOKEN}}
 
-
-### ------------------------- Casos de Prueba Adicionales ------------------------- ###
-
-### Create booking with an infant (requiere lógica de associatedAdultId)
-# POST {{HOST}}{{booking_api_path}}
-# Content-Type: application/json
-# Authorization: Bearer {{user_token}}
-# {
-#     "departureDate": "2025-01-10T10:00:00.000Z",
-#     "fk_origin_id": "{{origin_id}}",
-#     "fk_destination_id": "{{destination_id}}",
-#     "passengers": [
-#         {
-#             "firstName": "Maria",
-#             "firstSurname": "Lopez",
-#             "fk_gender_id": "{{gender_id}}",
-#             "dateOfBirth": "1990-03-15",
-#             "fk_nationality_country_id": "{{nationality_id}}",
-#             "fk_doc_type_id": "{{doc_type_id}}",
-#             "documentNumber": "EF2345678",
-#             "passengerType": "adult"
-#             // Si el backend asigna IDs temporales o el front los envía: "tempId": "adulto1" 
-#         },
-#         {
-#             "firstName": "Bebe",
-#             "firstSurname": "Lopez",
-#             "fk_gender_id": "{{gender_id}}",
-#             "dateOfBirth": "2023-11-01",
-#             "fk_nationality_country_id": "{{nationality_id}}",
-#             "fk_doc_type_id": "{{doc_type_id}}", // O un tipo de doc. para infantes
-#             "documentNumber": "INF901234",
-#             "passengerType": "infant",
-#             "associatedAdultId": null // El backend necesitaría lógica para asociar al adulto creado en la misma request
-#                                      // O el front envía "associatedAdultTempId": "adulto1"
-#         }
-#     ]
-# }
-
-### Create booking with validation error (e.g., too many passengers)
-# POST {{HOST}}{{booking_api_path}}
-# Content-Type: application/json
-# Authorization: Bearer {{user_token}}
-# {
-#     "departureDate": "2024-11-01T00:00:00.000Z",
-#     "fk_origin_id": "{{origin_id}}",
-#     "fk_destination_id": "{{destination_id}}",
-#     "passengers": [ /* Array con 10 pasajeros */ ]
-# }
-
-### Separador para organizar visualmente en VS Code (Rest Client)
-###
-
+### Delete a booking
+# @name deleteBooking
+DELETE {{HOST}}/bookings/{{createBooking.response.body.id}}
+Authorization: Bearer {{TOKEN}}
