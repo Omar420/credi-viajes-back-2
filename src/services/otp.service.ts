@@ -11,14 +11,14 @@ export class OTPService {
      * Si hay un registro activo (used=false), actualiza código y expiración.
      * En caso contrario, crea un nuevo registro.
      */
-    static async createEmailOTP(authId: string, purpose: 'email_verification' | 'password_reset' = 'email_verification') {
+    static async createEmailOTP(authId: string) {
         const code = generateSixDigitCode();
         const expiresAt = addMinutes(new Date(), Number(CONFIG.OTP_EXPIRATION_MINUTES));
 
         // Invalidar OTPs anteriores del mismo tipo para este authId
         await OTPEmailVerificationsModel.update(
             { used: true },
-            { where: { authId, purpose, used: false } }
+            { where: { authId, used: false } }
         );
 
         // Crear nuevo OTP
@@ -26,7 +26,6 @@ export class OTPService {
             authId, 
             code, 
             expiresAt, 
-            purpose, // Guardar el propósito del OTP
             used: false 
         });
     }
@@ -35,13 +34,12 @@ export class OTPService {
      * Verifica un OTP de email para un propósito específico.
      * Marca como usado si es válido.
      */
-    static async verifyEmailOTP(authId: string, code: string, purpose: 'email_verification' | 'password_reset' = 'email_verification'): Promise<boolean> {
+    static async verifyEmailOTP(authId: string, code: string): Promise<boolean> {
         const record = await OTPEmailVerificationsModel.findOne({
             where: { 
                 authId, 
                 code, 
-                used: false, 
-                purpose // Verificar también el propósito
+                used: false             
             }
         });
 

@@ -1,4 +1,7 @@
-@HOST=http://localhost:4000/api
+# @HOST=https://qa.back.creditviajes.com/api
+
+@HOST=http://localhost:4050/api
+
 
 @TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoSWQiOiI1MzczZThhMC00ZmU0LTQ4OGMtOWFkZi1jMjE3ODRhNTFhMTIiLCJpYXQiOjE3NDY1Njc5MzYsImV4cCI6MTc0NjU4NTkzNn0.2uuBOcBy9mRwzOuZ9T9kPlDYGhkz6oRdIHPsa2l7wzg
 
@@ -26,7 +29,7 @@ x-api-key: {{API_KEY}}
 Content-Type: application/json
 
 {
-  "email": "jyepes@vilo.team"
+  "email": "ogalindez420@gmail.com"
 }
 
 
@@ -36,7 +39,7 @@ Authorization: Bearer {{TOKEN}}
 Content-Type: application/json
 
 {
-  "verifyCode": "189624"
+  "verifyCode": "629411"
 }
 
 
@@ -46,7 +49,7 @@ x-api-key: {{API_KEY}}
 Content-Type: application/json
 
 {
-  "email": "jyepes@vilo.team"
+  "email": "ogalindez420@gmail.com"
 }
 
 ### 🔐 3. Contrasena del cliente (Auth)

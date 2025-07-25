@@ -26,11 +26,7 @@ const OTPEmailVerifications = sequelize.define(
             allowNull: false,
             defaultValue: false,
         },
-        purpose: { // Añadido el campo purpose directamente en la definición
-            type: DataTypes.ENUM('email_verification', 'password_reset'),
-            allowNull: false,
-            defaultValue: 'email_verification',
-        },
+     
         expiresAt: {
             allowNull: false,
             type: DataTypes.DATE,

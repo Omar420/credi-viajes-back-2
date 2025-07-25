@@ -4,7 +4,7 @@ import { getBCryptCompare } from "@src/helpers";
 import { validateIsEmail } from "@src/utils/validate-is-email";
 import { generatorJWT } from "@src/helpers/generator-jwt";
 import { CONFIG, MAIL, ROLES } from "@src/constants/config-global";
-import { AuthModel } from "@src/models";
+import { AuthModel, OTPEmailVerificationsModel } from "@src/models";
 import { AuthCreateEditAttributes, IAuthAttributes, IAuthParams } from "@src/types";
 import { CustomError } from "@src/utils/custom-exception.error";
 import { ClientService } from './client.service';
@@ -230,7 +230,7 @@ export class AuthService {
             return; // Simplemente retorna, el controlador enviará mensaje genérico
         }
 
-        const otpRecord = await OTPService.createEmailOTP(authRecord.id, 'password_reset');
+        const otpRecord = await OTPService.createEmailOTP(authRecord.id);
         
         const mailService = new MailService();
         await mailService.sendMail({
@@ -251,7 +251,7 @@ export class AuthService {
             throw new CustomError(ERROR_MESSAGES.ERROR_OTP_INVALID_OR_EXPIRED, 400);
         }
 
-        const otpIsValid = await OTPService.verifyEmailOTP(authRecord.id, otpCode, 'password_reset');
+        const otpIsValid = await OTPService.verifyEmailOTP(authRecord.id, otpCode);
         if (!otpIsValid) {
             // verifyEmailOTP ya lanza CustomError si es inválido o expirado, así que esta línea podría no ser necesaria
             // o podría ser un doble chequeo. Si verifyEmailOTP devuelve false en lugar de lanzar error, entonces sí es necesaria.
@@ -260,15 +260,15 @@ export class AuthService {
         }
         // Si OTPService.verifyEmailOTP lanza error, la ejecución no llegará aquí.
         // Si devuelve booleano y es false, entonces:
-        // if (!otpIsValid) throw new CustomError(ERROR_MESSAGES.OTP_INVALID_OR_EXPIRED, 400);
+        if (!otpIsValid) throw new CustomError(ERROR_MESSAGES.ERROR_OTP_INVALID_OR_EXPIRED, 400);
 
 
         // const newPasswordHash = CONFIG.ENCRYPT_DATA(newPasswordRaw);
         await this.updateAuth(authRecord.id, { password: newPasswordRaw, isPasswordCreated: true });
 
         // Opcional: invalidar el OTP específico si verifyEmailOTP no lo hace (aunque ya lo hace)
-        // const otpRecord = await OTPEmailVerificationsModel.findOne({ where: { authId: authRecord.id, code: otpCode, purpose: 'password_reset'} });
-        // if (otpRecord) await otpRecord.update({ used: true });
+        const otpRecord = await OTPEmailVerificationsModel.findOne({ where: { authId: authRecord.id, code: otpCode} });
+        if (otpRecord) await otpRecord.update({ used: true });
 
         const mailService = new MailService();
         await mailService.sendMail({

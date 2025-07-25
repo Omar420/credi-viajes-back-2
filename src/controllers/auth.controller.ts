@@ -167,15 +167,14 @@ export const forgotPasswordRequestHandler = async (req: Request, res: Response) 
 
          await OTPEmailVerificationsModel.update(
             { used: true },
-            { where: { authId: authRecord.id, used: false /*, purpose: 'password_reset' */ } } 
+            { where: { authId: authRecord.id, used: false  } } 
         );
 
         await OTPEmailVerificationsModel.create({
             authId: authRecord.id,
             code: otpCode,
             expiresAt,
-            used: false,
-            // purpose: 'password_reset' 
+            used: false,            
         });
         
         const mailService = new MailService(); 
