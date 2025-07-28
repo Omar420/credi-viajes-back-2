@@ -137,9 +137,19 @@ export async function saveProfileHandler(req: Request, res: Response) {
             currentAuthId = auth.id;
         }
 
-        const data = req.body;
+        const { countryPrefix, phoneNumber, ...data } = req.body;
 
-        const profile = await clientService.saveProfile({ authId: currentAuthId, ...data });
+        const profileData: any = { authId: currentAuthId, ...data };
+
+        if (countryPrefix) {
+            profileData.countryPrefix = countryPrefix;
+        }
+
+        if (phoneNumber) {
+            profileData.phoneNumber = phoneNumber;
+        }
+
+        const profile = await clientService.saveProfile(profileData);
 
         res.json({ message: "Perfil guardado", profile });
     } catch (err: any) {
