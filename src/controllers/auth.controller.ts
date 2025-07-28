@@ -2,7 +2,7 @@ import { CONFIG, MAIL, ROLES } from "@src/constants/config-global";
 import { ERROR_MESSAGES } from "@src/constants/messages.global";
 import { encryptData, getBCryptCompare } from "@src/helpers";
 import { generatorJWT } from "@src/helpers/generator-jwt";
-import { AuthService, UserService } from "@src/services";
+import { AuthService, ClientService, UserService } from "@src/services";
 import { validateIsEmail } from "@src/utils/validate-is-email";
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";

@@ -85,7 +85,7 @@ export class AuthService {
         const token = await generatorJWT({
             payload: {
                 authId: auth.id,
-                clientId: client?.id,
+                clientId: client?.getDataValue('id'),
             },
             expiresIn: `${auth.sessionLimit}h`,
         });
