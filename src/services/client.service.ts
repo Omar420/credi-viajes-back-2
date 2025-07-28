@@ -1,7 +1,7 @@
 import { generatorJWT } from "@src/helpers/generator-jwt";
 import { CONFIG, MAIL } from "@src/constants/config-global";
 import { OTPService } from "./otp.service";
-import { AddressesModel, AuthModel, ClientModel, ClientsAddressModel, DocumentModel, DocumentTypesModel, GenderModel } from "@src/models";
+import { AddressesModel, AuthModel, ClientModel, ClientsAddressModel, DocumentModel, DocumentTypesModel } from "@src/models";
 import { AuthService } from "./auth.service";
 import { ClientCreateEditAttributes, IClientPhoneAttributes, IClientInstance, IAuthAttributes } from "@src/types";
 import sequelize from "@src/config/connection";
@@ -67,33 +67,7 @@ export class ClientService {
     public async sendPhoneNumber(data: IClientPhoneAttributes) {
         const { authId, phoneNumber, countryPrefix } = data;
 
-        // return OTPService.createSendSmsOTP(authId, phoneNumber, countryPrefix);
-    }
-
-    public async verifyPhoneNumber(data: { authId: string, otpCode: string }) {
-        const { authId, otpCode } = data;
-
-        if (otpCode !== "123456") {
-            throw new Error("Invalid OTP code");
-        }
-
-        await AuthModel.update({ isPhoneVerified: true }, { where: { id: authId } });
-
-        const auth = await AuthModel.findByPk(authId);
-
-        if (auth && !auth.getDataValue('fk_client_id')) {
-            const gender = await GenderModel.findOne();
-            if (!gender) {
-                throw new Error("No genders found in the database.");
-            }
-            const newClient = await ClientModel.create({
-                firstName: "",
-                firstSurname: "",
-                birthdayDate: new Date(),
-                fk_gender_id: gender.getDataValue('id'),
-            });
-            await auth.update({ fk_client_id: newClient.getDataValue('id') });
-        }
+        return OTPService.createSendSmsOTP(authId, phoneNumber, countryPrefix);
     }
 
     public async saveProfile(data: ClientCreateEditAttributes) {
@@ -130,7 +104,7 @@ export class ClientService {
                     phoneNumber,
                     birthdayDate: new Date(birthdayDate),
                 };
-                if(genderId) {
+                if (genderId) {
                     createData.fk_gender_id = genderId;
                 }
                 client = await ClientModel.create(createData, { transaction });
@@ -161,31 +135,26 @@ export class ClientService {
 
             if (addresses && addresses.length > 0) {
                 const addressPromises = addresses.map(async (addr) => {
-                const address = await AddressesModel.create(
-                    {
-                        ...addr,
-                        fk_country_id: addr.countryId,
-                        fk_state_id: addr.stateId,
-                    },
-                    { transaction }
-                );
+                    const address = await AddressesModel.create(
+                        {
+                            ...addr,
+                            fk_country_id: addr.countryId,
+                            fk_state_id: addr.stateId,
+                        },
+                        { transaction }
+                    );
 
-                await ClientsAddressModel.create(
-                    {
-                        fk_client_id: client.getDataValue('id'),
-                        fk_address_id: address.getDataValue('id'),
-                    },
-                    { transaction }
-                );
-            });
+                    await ClientsAddressModel.create(
+                        {
+                            fk_client_id: client.getDataValue('id'),
+                            fk_address_id: address.getDataValue('id'),
+                        },
+                        { transaction }
+                    );
+                });
 
-            await Promise.all(addressPromises);
-
-            await AuthModel.update(
-                { fk_client_id: client.getDataValue('id') },
-                { where: { id: authId }, transaction }
-            );
-
+                await Promise.all(addressPromises);
+            }
             await transaction.commit();
 
             const clientPlain = client.get({ plain: true });
@@ -199,7 +168,6 @@ export class ClientService {
                     as: 'clientAddress',
                     where: { fk_client_id: client.getDataValue('id') },
                 }],
-                transaction
             });
 
             (clientPlain as any).addresses = savedAddresses.map(a => a.get({ plain: true }));
