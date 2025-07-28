@@ -48,8 +48,8 @@ router.post(
         check("genderId")
             .isUUID(4)
             .withMessage("El genderId debe ser un UUID válido"),
-        check("countryPrefix", "El código del teléfono es obligatorio").notEmpty(),
-        check("phoneNumber", "El número de teléfono ").isMobilePhone("any"),
+        check("countryPrefix", "El código del teléfono es obligatorio").optional().notEmpty(),
+        check("phoneNumber", "El número de teléfono ").optional().isMobilePhone("any"),
 
         check("addresses.*.countryId", "El país es obligatorio").if(check("addresses").exists()).notEmpty(),
         check("addresses.*.countryId")

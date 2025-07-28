@@ -119,16 +119,24 @@ export class ClientService {
                 throw new Error("Client not found");
             }
 
-            await client.update({
+            const updateData: any = {
                 firstName,
                 secondName,
                 firstSurname,
                 secondSurname,
-                countryPrefix,
-                phoneNumber,
                 birthdayDate: new Date(birthdayDate),
                 fk_gender_id: genderId,
-            }, { transaction });
+            };
+
+            if (countryPrefix) {
+                updateData.countryPrefix = countryPrefix;
+            }
+
+            if (phoneNumber) {
+                updateData.phoneNumber = phoneNumber;
+            }
+
+            await client.update(updateData, { transaction });
 
             if (addresses && addresses.length > 0) {
                 const addressPromises = addresses.map(async (addr) => {
