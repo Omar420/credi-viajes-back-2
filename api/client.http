@@ -3,7 +3,7 @@
 @HOST=http://localhost:4050/api
 
 
-@TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoSWQiOiI1MzczZThhMC00ZmU0LTQ4OGMtOWFkZi1jMjE3ODRhNTFhMTIiLCJpYXQiOjE3NDY1Njc5MzYsImV4cCI6MTc0NjU4NTkzNn0.2uuBOcBy9mRwzOuZ9T9kPlDYGhkz6oRdIHPsa2l7wzg
+@TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoSWQiOiJiZWI5MjM0MC1iMzNmLTRjZmQtYjBjYi0wNDg2N2I0NzFlYmYiLCJ1aWQiOm51bGwsImlhdCI6MTc1MzcyNjAwMiwiZXhwIjoxNzUzODEyNDAyfQ.hd6dWc3Dxhm2L44owmROaCFUxPEyS6v_5JSDPYxmsPI
 
 @API_KEY = cfrw9D3kOE9RT6yG
 
@@ -168,7 +168,7 @@ Content-Type: application/json
 
 ### 🔐 6 Registro de perfil del cllente
 POST {{HOST}}/client/profile
-Authorization: Bearer {{TOKEN}}
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoSWQiOiIzYWJiMGU3ZC1lNTRhLTQ4MDQtOGFmZS00YWFiYTU4OGIxNmMiLCJ1aWQiOm51bGwsImlhdCI6MTc1MzcxNTQwMSwiZXhwIjoxNzUzODAxODAxfQ.RTG4jWyyb88VWa9Zphf1vl-3vadzuWE6_ppOT7yCH7o
 Content-Type: application/json
 
 {
@@ -224,6 +224,4 @@ Content-Type: application/json
 #     ]
 #   }
 # }
-
-
 
