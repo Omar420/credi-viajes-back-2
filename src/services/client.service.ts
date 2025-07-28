@@ -113,10 +113,23 @@ export class ClientService {
                 throw new Error("Auth record not found");
             }
 
-            const client = await ClientModel.findOne({ where: { id: auth.getDataValue('fk_client_id') }, transaction });
+            let client = await ClientModel.findOne({ where: { id: auth.getDataValue('fk_client_id') }, transaction });
 
             if (!client) {
-                throw new Error("Client not found");
+                const createData: any = {
+                    firstName,
+                    secondName,
+                    firstSurname,
+                    secondSurname,
+                    countryPrefix,
+                    phoneNumber,
+                    birthdayDate: new Date(birthdayDate),
+                };
+                if(genderId) {
+                    createData.fk_gender_id = genderId;
+                }
+                client = await ClientModel.create(createData, { transaction });
+                await auth.update({ fk_client_id: client.getDataValue('id') }, { transaction });
             }
 
             const updateData: any = {
