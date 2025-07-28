@@ -1,7 +1,7 @@
 import { generatorJWT } from "@src/helpers/generator-jwt";
 import { CONFIG, MAIL } from "@src/constants/config-global";
 import { OTPService } from "./otp.service";
-import { AddressesModel, AuthModel, ClientModel, ClientsAddressModel, DocumentModel, DocumentTypesModel } from "@src/models";
+import { AddressesModel, AuthModel, ClientModel, ClientsAddressModel, DocumentModel, DocumentTypesModel, GenderModel } from "@src/models";
 import { AuthService } from "./auth.service";
 import { ClientCreateEditAttributes, IClientPhoneAttributes, IClientInstance, IAuthAttributes } from "@src/types";
 import sequelize from "@src/config/connection";
@@ -69,7 +69,26 @@ export class ClientService {
 
         // return OTPService.createSendSmsOTP(authId, phoneNumber, countryPrefix);
         await AuthModel.update({ isPhoneVerified: true }, { where: { id: authId } });
-        await ClientModel.update({ phoneNumber, countryPrefix }, { where: { authId } });
+
+        const auth = await AuthModel.findByPk(authId);
+
+        if (auth && auth.getDataValue('fk_client_id')) {
+            await ClientModel.update({ phoneNumber, countryPrefix }, { where: { id: auth.getDataValue('fk_client_id') } });
+        } else if (auth) {
+            const gender = await GenderModel.findOne();
+            if (!gender) {
+                throw new Error("No genders found in the database.");
+            }
+            const newClient = await ClientModel.create({
+                phoneNumber,
+                countryPrefix,
+                firstName: "Default",
+                firstSurname: "User",
+                birthdayDate: new Date(),
+                fk_gender_id: gender.getDataValue('id'),
+            });
+            await auth.update({ fk_client_id: newClient.getDataValue('id') });
+        }
     }
 
     public async saveProfile(data: ClientCreateEditAttributes) {
