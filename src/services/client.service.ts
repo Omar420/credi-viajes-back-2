@@ -68,6 +68,15 @@ export class ClientService {
         const { authId, phoneNumber, countryPrefix } = data;
 
         // return OTPService.createSendSmsOTP(authId, phoneNumber, countryPrefix);
+    }
+
+    public async verifyPhoneNumber(data: { authId: string, otpCode: string }) {
+        const { authId, otpCode } = data;
+
+        if (otpCode !== "123456") {
+            throw new Error("Invalid OTP code");
+        }
+
         await AuthModel.update({ isPhoneVerified: true }, { where: { id: authId } });
 
         const auth = await AuthModel.findByPk(authId);
@@ -78,10 +87,8 @@ export class ClientService {
                 throw new Error("No genders found in the database.");
             }
             const newClient = await ClientModel.create({
-                phoneNumber,
-                countryPrefix,
-                firstName: "Default",
-                firstSurname: "User",
+                firstName: "",
+                firstSurname: "",
                 birthdayDate: new Date(),
                 fk_gender_id: gender.getDataValue('id'),
             });

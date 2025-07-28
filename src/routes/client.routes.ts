@@ -5,7 +5,8 @@ import {
     registerClientHandler,
     sendPhoneHandler,
     saveProfileHandler,
-    saveDocumentsHandler
+    saveDocumentsHandler,
+    verifyPhoneHandler
 } from "@src/controllers/client.controller";
 import { checkAuthFlag, checkExistenceClientMiddleware, validateApiKeyMiddleware, validateFieldsMiddleware, validateJWTMiddleware } from "@src/middlewares";
 
@@ -34,6 +35,16 @@ router.post(
         // validateFieldsMiddleware
     ],
     sendPhoneHandler
+);
+
+router.post(
+    "/phone/verify",
+    [
+        validateJWTMiddleware,
+        check("otpCode", "El código OTP es obligatorio").notEmpty(),
+        validateFieldsMiddleware,
+    ],
+    verifyPhoneHandler
 );
 
 router.post(

@@ -61,6 +61,28 @@ export async function registerClientHandler(req: Request, res: Response) {
     }
 }
 
+export async function verifyPhoneHandler(req: Request, res: Response) {
+    try {
+        const { otpCode } = req.body;
+        const authId = (req as any).authId;
+
+        await clientService.verifyPhoneNumber({ authId, otpCode });
+
+        return res.status(200).json(
+            {
+                status: "success",
+                message: `Teléfono verificado correctamente`
+            }
+        );
+
+    } catch (err: any) {
+        return res.status(500).json({
+            status: 'error',
+            message: err.message,
+        });
+    }
+}
+
 export async function sendPhoneHandler(req: Request, res: Response) {
     try {
         const { phoneNumber, countryPrefix, email } = req.body;
