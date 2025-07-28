@@ -124,7 +124,7 @@ export async function clientRefreshTokenHandler(req: Request, res: Response) {
 
         const client = await new ClientService().findClientByAuthId(auth.id);
 
-        const token = await authService.refresh({ authId: auth.id, clientId: client?.id });
+        const token = await authService.refresh({ authId: auth.id, clientId: client?.getDataValue('id') });
 
         return res.status(200).json(
             {
