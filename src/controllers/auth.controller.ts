@@ -83,6 +83,64 @@ export async function postSingIn(
     }
 }
 
+export async function clientLoginHandler(req: Request, res: Response) {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) return res.status(400).json({
+            status: 'error',
+            errors: errors.array()
+        });
+
+        const { email, password } = req.body;
+
+        const { client, accessToken } = await authService.clientLogin(email, password);
+        res.status(200).json(
+            {
+                status: 'success',
+                message: "Login exitoso",
+                data: client,
+                accessToken
+            });
+    } catch (err: any) {
+        res.status(err.status || 500).json(
+            {
+                status: 'error',
+                message: err.message || "Error en login"
+            });
+    }
+}
+
+export async function clientRefreshTokenHandler(req: Request, res: Response) {
+    try {
+        const { email } = req.body;
+
+        const auth = await authService.findAuthByEmail(email);
+        if (!auth) {
+            return res.status(404).json({
+                status: 'error',
+                message: "Cliente no registrado",
+            });
+        }
+
+        const client = await new ClientService().findClientByAuthId(auth.id);
+
+        const token = await authService.refresh({ authId: auth.id, clientId: client?.id });
+
+        return res.status(200).json(
+            {
+                status: 'success',
+                message: "Token actualizado correctamente",
+                accessToken: token
+            });
+    } catch (err: any) {
+        return res.status(err.status || 500).json(
+            {
+                status: 'error',
+                message: err.message || "Error al refrescar token"
+            });
+    }
+}
+
 // Nuevos métodos para cambio y reseteo de contraseña
 // Añadidos al final del archivo.
 

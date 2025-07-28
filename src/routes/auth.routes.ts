@@ -1,4 +1,4 @@
-import { createPasswordHandler, loginHandler, postSingIn, refreshTokenHandler, retryEmailOTPHandler, retrySmsOTPHandler, verifyEmailOTPHandler, verifySmsOTPHandler } from "@src/controllers";
+import { clientLoginHandler, clientRefreshTokenHandler, createPasswordHandler, loginHandler, postSingIn, refreshTokenHandler, retryEmailOTPHandler, retrySmsOTPHandler, verifyEmailOTPHandler, verifySmsOTPHandler } from "@src/controllers";
 import { checkAuthFlag, checkUserByEmailMiddleware, validateApiKeyMiddleware, validateFieldsMiddleware, validateJWTMiddleware } from "@src/middlewares";
 import { Router } from "express";
 import { check } from "express-validator";
@@ -150,6 +150,27 @@ router.post(
         validateFieldsMiddleware,
     ],
     resetPasswordWithTokenHandler
+);
+
+router.post(
+    "/client/sign-in",
+    [
+        check("email", "El Correo electrónico es obligatorio").not().isEmpty(),
+        check("password", "Contraseña es obligatorio").not().isEmpty(),
+        validateFieldsMiddleware,
+        validateApiKeyMiddleware
+    ],
+    clientLoginHandler
+);
+
+router.post(
+    "/client/refresh",
+    [
+        check("email", "El Correo electrónico es obligatorio").not().isEmpty(),
+        validateFieldsMiddleware,
+        validateApiKeyMiddleware
+    ],
+    clientRefreshTokenHandler
 );
 
 export default router;

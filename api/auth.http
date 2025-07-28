@@ -22,6 +22,25 @@ x-api-key: {{API_KEY}}
    "email": "jyepes@vilo.team"
 }
 
+### Client Sign in
+POST {{HOST}}/auth/client/sign-in
+Content-Type: application/json
+x-api-key: {{API_KEY}}
+
+{
+  "email": "ogalindez420@gmail.com",
+  "password": "14965Mix.."
+}
+
+### Client Refresh token
+POST {{HOST}}/auth/client/refresh
+Content-Type: application/json
+x-api-key: {{API_KEY}}
+
+{
+   "email": "ogalindez420@gmail.com"
+}
+
 
 # client Login
 

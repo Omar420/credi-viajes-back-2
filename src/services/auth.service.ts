@@ -70,6 +70,29 @@ export class AuthService {
         return { user: userLogged, accessToken: token };
     }
 
+    public async clientLogin(email: string, password: string) {
+        const auth = await this.findAuthByEmail(email);
+        if (!auth) {
+            throw new CustomError("Cliente no registrado", 404);
+        }
+
+        if (!getBCryptCompare(password, auth.password!)) {
+            throw new CustomError("Correo electrónico o contraseña inválida", 401);
+        }
+
+        const client = await this.clientService.findClientByAuthId(auth.id);
+
+        const token = await generatorJWT({
+            payload: {
+                authId: auth.id,
+                clientId: client?.id,
+            },
+            expiresIn: `${auth.sessionLimit}h`,
+        });
+
+        return { client, accessToken: token };
+    }
+
     public async refresh({
         uid,
         authId,
