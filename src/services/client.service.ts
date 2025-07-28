@@ -67,7 +67,9 @@ export class ClientService {
     public async sendPhoneNumber(data: IClientPhoneAttributes) {
         const { authId, phoneNumber, countryPrefix } = data;
 
-        return OTPService.createSendSmsOTP(authId, phoneNumber, countryPrefix);
+        // return OTPService.createSendSmsOTP(authId, phoneNumber, countryPrefix);
+        await AuthModel.update({ isPhoneVerified: true }, { where: { id: authId } });
+        await ClientModel.update({ phoneNumber, countryPrefix }, { where: { authId } });
     }
 
     public async saveProfile(data: ClientCreateEditAttributes) {
