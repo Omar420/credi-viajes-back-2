@@ -113,74 +113,44 @@ export class ClientService {
                 addresses
             } = data;
 
-            const auth = await AuthModel.findByPk(authId, { transaction });
-            if (!auth) {
-                throw new Error("Auth record not found");
-            }
+            const client = await ClientModel.create({
+                firstName,
+                secondName,
+                firstSurname,
+                secondSurname,
+                countryPrefix,
+                phoneNumber,
+                birthdayDate: new Date(birthdayDate),
+                fk_gender_id: genderId,
+            },
+                { transaction });
 
-            let client = await ClientModel.findOne({ where: { id: auth.getDataValue('fk_client_id') }, transaction });
+            const addressPromises = addresses.map(async (addr) => {
+                const address = await AddressesModel.create(
+                    {
+                        ...addr,
+                        fk_country_id: addr.countryId,
+                        fk_state_id: addr.stateId,
+                    },
+                    { transaction }
+                );
 
-            if (!client) {
-                const createData: any = {
-                    firstName,
-                    secondName,
-                    firstSurname,
-                    secondSurname,
-                    countryPrefix,
-                    phoneNumber,
-                    birthdayDate: new Date(birthdayDate),
-                };
-                if (genderId) {
-                    createData.fk_gender_id = genderId;
-                }
-                client = await ClientModel.create(createData, { transaction });
-                await auth.update({ fk_client_id: client.getDataValue('id') }, { transaction });
-            } else {
-                const updateData: any = {
-                    firstName,
-                    secondName,
-                    firstSurname,
-                    secondSurname,
-                    birthdayDate: new Date(birthdayDate),
-                };
+                await ClientsAddressModel.create(
+                    {
+                        fk_client_id: client.getDataValue('id'),
+                        fk_address_id: address.getDataValue('id'),
+                    },
+                    { transaction }
+                );
+            });
 
-                if (genderId) {
-                    updateData.fk_gender_id = genderId;
-                }
+            await Promise.all(addressPromises);
 
-                if (countryPrefix) {
-                    updateData.countryPrefix = countryPrefix;
-                }
+            await AuthModel.update(
+                { fk_client_id: client.getDataValue('id') },
+                { where: { id: authId }, transaction }
+            );
 
-                if (phoneNumber) {
-                    updateData.phoneNumber = phoneNumber;
-                }
-
-                await client.update(updateData, { transaction });
-            }
-
-            if (addresses && addresses.length > 0) {
-                const addressPromises = addresses.map(async (addr) => {
-                    const address = await AddressesModel.create(
-                        {
-                            ...addr,
-                            fk_country_id: addr.countryId,
-                            fk_state_id: addr.stateId,
-                        },
-                        { transaction }
-                    );
-
-                    await ClientsAddressModel.create(
-                        {
-                            fk_client_id: client.getDataValue('id'),
-                            fk_address_id: address.getDataValue('id'),
-                        },
-                        { transaction }
-                    );
-                });
-
-                await Promise.all(addressPromises);
-            }
             await transaction.commit();
 
             const clientPlain = client.get({ plain: true });
@@ -194,6 +164,7 @@ export class ClientService {
                     as: 'clientAddress',
                     where: { fk_client_id: client.getDataValue('id') },
                 }],
+                transaction
             });
 
             (clientPlain as any).addresses = savedAddresses.map(a => a.get({ plain: true }));
