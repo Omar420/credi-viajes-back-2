@@ -21,6 +21,25 @@ export async function getGenders(req: Request, res: Response) {
     }
 }
 
+export async function getStates(req: Request, res: Response) {
+    try {
+        const utilService = new UtilService();
+        const { countryId } = req.params;
+        const states = await utilService.findAndCountAllStates(countryId);
+
+        return res.status(200).json({
+            status: "success",
+            message: "Estados obtenidos correctamente",
+            data: states,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Error al obtener estados",
+            error,
+        });
+    }
+}
+
 export async function getBookingConstants(req: Request, res: Response) {
     try {
         const {

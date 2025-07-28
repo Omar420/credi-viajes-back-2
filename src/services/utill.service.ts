@@ -43,4 +43,11 @@ export class UtilService {
         });
     }
 
+    async findAndCountAllStates(countryId: string) {
+        return await StatesModel.findAndCountAll({
+            where: { fk_country_id: countryId },
+            order: [["name", "ASC"]],
+        });
+    }
+
 }

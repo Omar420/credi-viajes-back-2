@@ -19,3 +19,8 @@ Content-Type: application/json
 GET {{HOST}}/utils/countries?includeStates=true&search=VEN
 x-api-key: {{API_KEY}}
 Content-Type: application/json
+
+### 🔐 Consulta de estados por pais
+GET {{HOST}}/utils/states/a0721528-921a-4143-8547-0305BCAbac51
+x-api-key: {{API_KEY}}
+Content-Type: application/json
