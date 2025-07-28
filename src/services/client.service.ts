@@ -108,7 +108,18 @@ export class ClientService {
                 addresses
             } = data;
 
-            const client = await ClientModel.create({
+            const auth = await AuthModel.findByPk(authId, { transaction });
+            if (!auth) {
+                throw new Error("Auth record not found");
+            }
+
+            const client = await ClientModel.findOne({ where: { id: auth.getDataValue('fk_client_id') }, transaction });
+
+            if (!client) {
+                throw new Error("Client not found");
+            }
+
+            await client.update({
                 firstName,
                 secondName,
                 firstSurname,
@@ -117,8 +128,7 @@ export class ClientService {
                 phoneNumber,
                 birthdayDate: new Date(birthdayDate),
                 fk_gender_id: genderId,
-            },
-                { transaction });
+            }, { transaction });
 
             const addressPromises = addresses.map(async (addr) => {
                 const address = await AddressesModel.create(
