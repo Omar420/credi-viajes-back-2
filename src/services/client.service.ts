@@ -170,8 +170,6 @@ export class ClientService {
             }
 
 
-            await transaction.commit();
-
             const clientPlain = client.get({ plain: true });
 
             clientPlain.genderId = clientPlain.fk_gender_id;
@@ -183,14 +181,19 @@ export class ClientService {
                     as: 'clientAddress',
                     where: { fk_client_id: client.getDataValue('id') },
                 }],
+                transaction
             });
 
             (clientPlain as any).addresses = savedAddresses.map(a => a.get({ plain: true }));
 
+            await transaction.commit();
+
             return clientPlain;
         }
         catch (error: any) {
-            await transaction.rollback();
+            if (transaction.finished !== 'commit' && transaction.finished !== 'rollback') {
+                await transaction.rollback();
+            }
             throw error;
         }
     }
