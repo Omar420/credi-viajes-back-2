@@ -43,7 +43,7 @@ export async function registerClientHandler(req: Request, res: Response) {
 
         const { auth, accessToken } = await clientService.register(email);
 
-        const { createdAt, updatedAt, ...authData } = auth;
+        const { createdAt, updatedAt, ...authInfo } = auth;
 
         return res.status(201).json(
             {
