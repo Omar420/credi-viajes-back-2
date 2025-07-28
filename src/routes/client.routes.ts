@@ -51,12 +51,14 @@ router.post(
         check("countryPrefix", "El código del teléfono es obligatorio").notEmpty(),
         check("phoneNumber", "El número de teléfono ").isMobilePhone("any"),
 
-        check("addresses.*.countryId", "El país es obligatorio").notEmpty(),
+        check("addresses.*.countryId", "El país es obligatorio").if(check("addresses").exists()).notEmpty(),
         check("addresses.*.countryId")
+            .if(check("addresses").exists())
             .isUUID(4)
             .withMessage("El addresses.countryId debe ser un UUID válido"),
-        check("addresses.*.stateId", "El estado es obligatorio").notEmpty(),
+        check("addresses.*.stateId", "El estado es obligatorio").if(check("addresses").exists()).notEmpty(),
         check("addresses.*.stateId")
+            .if(check("addresses").exists())
             .isUUID(4)
             .withMessage("El addresses.stateId debe ser un UUID válido"),
         check("email").isEmail().optional(),

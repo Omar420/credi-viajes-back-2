@@ -130,26 +130,28 @@ export class ClientService {
                 fk_gender_id: genderId,
             }, { transaction });
 
-            const addressPromises = addresses.map(async (addr) => {
-                const address = await AddressesModel.create(
-                    {
-                        ...addr,
-                        fk_country_id: addr.countryId,
-                        fk_state_id: addr.stateId,
-                    },
-                    { transaction }
-                );
+            if (addresses && addresses.length > 0) {
+                const addressPromises = addresses.map(async (addr) => {
+                    const address = await AddressesModel.create(
+                        {
+                            ...addr,
+                            fk_country_id: addr.countryId,
+                            fk_state_id: addr.stateId,
+                        },
+                        { transaction }
+                    );
 
-                await ClientsAddressModel.create(
-                    {
-                        fk_client_id: client.getDataValue('id'),
-                        fk_address_id: address.getDataValue('id'),
-                    },
-                    { transaction }
-                );
-            });
+                    await ClientsAddressModel.create(
+                        {
+                            fk_client_id: client.getDataValue('id'),
+                            fk_address_id: address.getDataValue('id'),
+                        },
+                        { transaction }
+                    );
+                });
 
-            await Promise.all(addressPromises);
+                await Promise.all(addressPromises);
+            }
 
             await AuthModel.update(
                 { fk_client_id: client.getDataValue('id') },
