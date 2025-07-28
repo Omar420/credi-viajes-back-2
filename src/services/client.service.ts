@@ -3,32 +3,39 @@ import { CONFIG, MAIL } from "@src/constants/config-global";
 import { OTPService } from "./otp.service";
 import { AddressesModel, AuthModel, ClientModel, ClientsAddressModel, DocumentModel, DocumentTypesModel } from "@src/models";
 import { AuthService } from "./auth.service";
-import { ClientCreateEditAttributes, IClientPhoneAttributes, IClientInstance } from "@src/types";
+import { ClientCreateEditAttributes, IClientPhoneAttributes, IClientInstance, IAuthAttributes } from "@src/types";
 import sequelize from "@src/config/connection";
 
 export class ClientService {
 
 
-    public async register(email: string) {
+    public async register(email: string, isUpdate = false) {
         const authService = new AuthService();
+        let auth: IAuthAttributes;
 
-        const auth = await AuthModel.create({ email });
+        if (isUpdate) {
+            auth = (await AuthModel.findOne({ where: { email } }))!.get({ plain: true });
+        } else {
+            auth = (await AuthModel.create({ email })).get({ plain: true });
+        }
 
         const accessToken = await generatorJWT(
             {
                 payload: {
-                    authId: auth.getDataValue('id'),
+                    authId: auth.id,
                     uid: null
                 },
                 expiresIn: CONFIG.EXPIRATED_LAPSE_TIME
             });
 
-        await OTPService.createEmailOTP(auth.getDataValue('id'));
+        if (!isUpdate) {
+            await OTPService.createEmailOTP(auth.id);
 
-        await authService.sendEmailOTP(
-            auth.getDataValue('id'),
-            MAIL.TEMPLATES.EMAIL_VERIFICATION,
-            MAIL.SUBJECT.EMAIL_VERIFICATION,);
+            await authService.sendEmailOTP(
+                auth.id,
+                MAIL.TEMPLATES.EMAIL_VERIFICATION,
+                MAIL.SUBJECT.EMAIL_VERIFICATION,);
+        }
 
         return { auth, accessToken };
     }
@@ -124,6 +131,17 @@ export class ClientService {
 
             clientPlain.genderId = clientPlain.fk_gender_id;
             delete clientPlain.fk_gender_id;
+
+            const savedAddresses = await AddressesModel.findAll({
+                include: [{
+                    model: ClientsAddressModel,
+                    as: 'clientAddress',
+                    where: { fk_client_id: client.getDataValue('id') },
+                }],
+                transaction
+            });
+
+            (clientPlain as any).addresses = savedAddresses.map(a => a.get({ plain: true }));
 
             return clientPlain;
         }

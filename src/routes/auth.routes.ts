@@ -38,7 +38,9 @@ router
     .route("/email/verify")
     .post([validateJWTMiddleware,
         checkAuthFlag("isEmailVerified", true, "El correo ya fue verificado"),
-        check("verifyCode").isLength({ min: 6, max: 6 })
+        check("verifyCode").isLength({ min: 6, max: 6 }),
+        check("email").isEmail().optional(),
+        validateFieldsMiddleware
     ],
         verifyEmailOTPHandler);
 
@@ -55,7 +57,10 @@ router.post("/password", [
     validateJWTMiddleware,
     checkAuthFlag("isEmailVerified", false, "El correo debe ser verificado"),
     checkAuthFlag("isPasswordCreated", true, "El password ya fue verificado"),
-    check("password").isLength({ min: 6 })],
+    check("password").isLength({ min: 6 }),
+    check("email").isEmail().optional(),
+    validateFieldsMiddleware
+],
     createPasswordHandler);
 
 
@@ -69,7 +74,9 @@ router
             .withMessage("El prefijo debe tener el formato +<código internacional> (1–3 dígitos, sin ceros iniciales)"),
         check("countryPrefix").notEmpty(),
         check("phoneNumber").isMobilePhone("any"),
-        check("verifyCode").isLength({ min: 6, max: 6 })
+        check("verifyCode").isLength({ min: 6, max: 6 }),
+        check("email").isEmail().optional(),
+        validateFieldsMiddleware
     ],
         verifySmsOTPHandler);
 

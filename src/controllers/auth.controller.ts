@@ -331,22 +331,29 @@ export async function refreshTokenHandler(req: Request, res: Response) {
 
 export async function verifyEmailOTPHandler(req: AuthenticatedRequest, res: Response) {
     try {
-        const { authId, email } = req;
-        const { verifyCode } = req.body;
+        const { authId } = req;
+        const { verifyCode, email } = req.body;
 
-        if (!authId) {
-            return res.status(401).json({
-                status: 'error',
-                message: "Token no válido",
-            });
+        let currentAuthId = authId;
+        if (!currentAuthId) {
+            const auth = await authService.findAuthByEmail(email);
+            if (!auth) {
+                return res.status(404).json({
+                    status: 'error',
+                    message: "Correo no encontrado",
+                });
+            }
+            currentAuthId = auth.id;
         }
 
-        await authService.verifyEmailOTP(authId, verifyCode);
+        await authService.verifyEmailOTP(currentAuthId!, verifyCode);
+
+        const auth = await authService.findAuthById(currentAuthId!);
 
         return res.status(200).json({
             headerTitle: "Verificación de correo electrónico",
             title: "Felicidades",
-            message: `Tu correo electrónico ${email} se ha vinculado a tu cuenta. Ahora puedes usar esta dirección para inciar sesión.`,
+            message: `Tu correo electrónico ${auth?.email} se ha vinculado a tu cuenta. Ahora puedes usar esta dirección para inciar sesión.`,
             action: {
                 buttonText: "Continuar",
                 buttonCallback: "CreatePassword"
@@ -407,9 +414,22 @@ export async function retryEmailOTPHandler(req: Request, res: Response) {
 export async function createPasswordHandler(req: Request, res: Response) {
     try {
         const authId = (req as any).authId;
-        const { password } = req.body;
+        const { password, email } = req.body;
 
-        await authService.createPassword(authId,
+        let currentAuthId = authId;
+        if (!currentAuthId) {
+            const auth = await authService.findAuthByEmail(email);
+            if (!auth) {
+                return res.status(404).json({
+                    status: 'error',
+                    message: "Correo no encontrado",
+                });
+            }
+            currentAuthId = auth.id;
+        }
+
+
+        await authService.createPassword(currentAuthId,
             encryptData(password)
         );
 
@@ -437,10 +457,23 @@ export async function verifySmsOTPHandler(req: Request, res: Response) {
         const {
             countryPrefix,
             phoneNumber,
-            verifyCode
+            verifyCode,
+            email
         } = req.body;
 
-        const isVerified = await authService.verifyPhoneOTP(authId, verifyCode);
+        let currentAuthId = authId;
+        if (!currentAuthId) {
+            const auth = await authService.findAuthByEmail(email);
+            if (!auth) {
+                return res.status(404).json({
+                    status: 'error',
+                    message: "Correo no encontrado",
+                });
+            }
+            currentAuthId = auth.id;
+        }
+
+        const isVerified = await authService.verifyPhoneOTP(currentAuthId, verifyCode);
 
         return res.status(200).json(
             {

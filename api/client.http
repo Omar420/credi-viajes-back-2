@@ -32,6 +32,35 @@ Content-Type: application/json
   "email": "ogalindez420@gmail.com"
 }
 
+# Response: 201 Created
+# {
+#   "status": "success",
+#   "message": "Registro exitoso, revisa tu correo electrónico",
+#   "auth": {
+#     "id": "c7a8f8f0-4f8e-4b7a-8b0e-8e4f6b0e8e4f",
+#     "email": "ogalindez420@gmail.com",
+#     "isEmailVerified": false,
+#     "isPasswordCreated": false,
+#     "isPhoneVerified": false
+#   },
+#   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoSWQiOiJjN2E4ZjhmMC00ZjhlLTRiN2EtOGIwZS04ZTRmNmIwZThlNGYiLCJ1aWQiOm51bGwsImlhdCI6MTc0ODQyNjE2OCwiZXhwIjoxNzQ4NDI5NzY4fQ...."
+# }
+
+# Response: 200 OK (if email already exists)
+# {
+#   "status": "success",
+#   "message": "El correo ya se encuentra registrado, puede continuar con el proceso.",
+#   "validate": {
+#     "email": true,
+#     "emailVerify": false,
+#     "password": false,
+#     "phone": false,
+#     "phoneVerify": false,
+#     "profile": false
+#   },
+#   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoSWQiOiJjN2E4ZjhmMC00ZjhlLTRiN2EtOGIwZS04ZTRmNmIwZThlNGYiLCJ1aWQiOm51bGwsImlhdCI6MTc0ODQyNjE2OCwiZXhwIjoxNzQ4NDI5NzY4fQ. ..."
+# }
+
 
 ### 🔐 2. Verificar correo del cliente (Auth)
 POST {{HOST}}/auth/email/verify
@@ -39,8 +68,20 @@ Authorization: Bearer {{TOKEN}}
 Content-Type: application/json
 
 {
+  "email": "ogalindez420@gmail.com",
   "verifyCode": "629411"
 }
+
+# Response: 200 OK
+# {
+#   "headerTitle": "Verificación de correo electrónico",
+#   "title": "Felicidades",
+#   "message": "Tu correo electrónico ogalindez420@gmail.com se ha vinculado a tu cuenta. Ahora puedes usar esta dirección para inciar sesión.",
+#   "action": {
+#     "buttonText": "Continuar",
+#     "buttonCallback": "CreatePassword"
+#   }
+# }
 
 
 ### 🔐 2.1. Reenvio de codigo del cliente por correo y obtencion del token
@@ -58,8 +99,20 @@ Authorization: Bearer {{TOKEN}}
 Content-Type: application/json
 
 {
+  "email": "ogalindez420@gmail.com",
   "password": "Vilotech!!@#4"
 }
+
+# Response: 200 OK
+# {
+#   "headerTitle": "¡Su contraseña se ha creado correctamente!",
+#   "title": "Felicidades",
+#   "message": "Ahora puedes usarla para iniciar sesión en tu cuenta",
+#   "action": {
+#     "buttonText": "Continuar",
+#     "buttonCallback": "--"
+#   }
+# }
 
 ### 🔐 4. Registro de telefono del cliente
 POST {{HOST}}/client/phone
@@ -67,9 +120,16 @@ Authorization: Bearer {{TOKEN}}
 Content-Type: application/json
 
 {
+  "email": "ogalindez420@gmail.com",
   "countryPrefix": "+58",
   "phonNumber": "4123867513"
 }
+
+# Response: 200 OK
+# {
+#   "status": "success",
+#   "message": "OTP SMS enviado a +58-4123867513"
+# }
 
 ### 🔐 5. Verificar sms del cliente (Auth)
 POST {{HOST}}/auth/phone/verify
@@ -77,10 +137,23 @@ Authorization: Bearer {{TOKEN}}
 Content-Type: application/json
 
 {
+  "email": "ogalindez420@gmail.com",
   "countryPrefix": "+58",
   "phonNumber": "4123867513",
   "verifyCode": "123456"
 }
+
+# Response: 200 OK
+# {
+#   "status": "success",
+#   "headerTitle": "Verificación exitosa",
+#   "title": "Verificación exitosa",
+#   "message": "Tu número +58-4123867513 se ha vinculado a tu cuenta.",
+#   "action": {
+#     "buttonText": "Continuar",
+#     "buttonCallback": "--"
+#   }
+# }
 
 
 ### 🔐 5.1. Reenvio de sms del cliente
@@ -99,6 +172,7 @@ Authorization: Bearer {{TOKEN}}
 Content-Type: application/json
 
 {
+  "email": "ogalindez420@gmail.com",
   "countryPrefix": "58",
   "phoneNumber": "4123867513",
   "firstName": "Jesus",
@@ -125,6 +199,31 @@ Content-Type: application/json
   ]
 }
 
+# Response: 200 OK
+# {
+#   "message": "Perfil guardado",
+#   "profile": {
+#     "id": "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6",
+#     "firstName": "Jesus",
+#     "secondName": "D",
+#     "firstSurname": "Yepes",
+#     "secondSurname": "T",
+#     "countryPrefix": "58",
+#     "phoneNumber": "4123867513",
+#     "birthdayDate": "1995-05-12T00:00:00.000Z",
+#     "genderId": "fc6bfcb3-41da-4a06-9d8d-e5b00e1aabf2",
+#     "addresses": [
+#       {
+#         "id": "b1c2d3e4-f5g6-h7i8-j9k0-l1m2n3o4p5q6",
+#         "city": "Caracas",
+#         "address": "Las mercedes, baruta , tamanaco",
+#         "zipCode": "1060",
+#         "countryId": "57330fd9-fd79-4d4f-ac19-279d406bc864",
+#         "stateId": "5b349b92-8e60-489b-b12a-0ebc3fd8291a"
+#       }
+#     ]
+#   }
+# }
 
 
 

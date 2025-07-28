@@ -28,6 +28,7 @@ router.post(
             .matches(/^\+[1-9]\d{0,2}$/)
             .withMessage("El prefijo debe tener el formato +<código internacional> (1–3 dígitos, sin ceros iniciales)"),
         check("countryPrefix").notEmpty(),
+        check("email").isEmail().optional(),
         validateFieldsMiddleware,
         // check("phoneNumber").isMobilePhone("any"),
         // validateFieldsMiddleware
@@ -58,7 +59,7 @@ router.post(
         check("addresses.*.stateId")
             .isUUID(4)
             .withMessage("El addresses.stateId debe ser un UUID válido"),
-
+        check("email").isEmail().optional(),
         validateFieldsMiddleware,
         checkExistenceClientMiddleware
     ],

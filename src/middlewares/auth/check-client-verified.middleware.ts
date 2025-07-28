@@ -20,12 +20,12 @@ export function checkAuthFlag(
                 auth = await authService.findAuthById(authId);
             } else if (email) {
                 auth = await authService.findAuthByEmail(email);
-            } else {
-                return res.status(401).json({ status: "error", message: "No hay authId/email en la petición" });
             }
 
             if (!auth) {
-                return res.status(404).json({ status: "error", message: "Auth no encontrado" });
+                // If the auth record is not found, we can't check the flag, so we let the request continue.
+                // The handler will then be responsible for managing the case where the auth record does not exist.
+                return next();
             }
 
             const current = (auth as any)[flag] as boolean;

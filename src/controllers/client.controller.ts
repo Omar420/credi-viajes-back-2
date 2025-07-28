@@ -17,25 +17,39 @@ export async function registerClientHandler(req: Request, res: Response) {
 
         const { email } = req.body;
 
-        const emailRegistered =
-            await userService.findUserByEmail(email)
-            || await authService.findAuthByEmail(email);
+        const authData = await authService.findAuthByEmail(email);
 
-        if (emailRegistered) {
-            return res.status(409).json(
-                {
-                    status: 'error',
-                    message: "Este correo ya se encuentra registrado.",
-                });
+        if (authData) {
+            const client = await clientService.findClientByAuthId(authData.id);
+
+            const validate = {
+                email: true,
+                emailVerify: authData.isEmailVerified,
+                password: authData.isPasswordCreated,
+                phone: authData.isPhoneVerified,
+                phoneVerify: authData.isPhoneVerified,
+                profile: !!client,
+            };
+
+            const { accessToken } = await clientService.register(email, true);
+
+            return res.status(200).json({
+                status: 'success',
+                message: "El correo ya se encuentra registrado, puede continuar con el proceso.",
+                validate,
+                accessToken
+            });
         }
 
         const { auth, accessToken } = await clientService.register(email);
+
+        const { createdAt, updatedAt, ...authData } = auth;
 
         return res.status(201).json(
             {
                 status: 'success',
                 message: "Registro exitoso, revisa tu correo electrónico",
-                auth,
+                auth: authData,
                 accessToken
             });
 
@@ -49,10 +63,22 @@ export async function registerClientHandler(req: Request, res: Response) {
 
 export async function sendPhoneHandler(req: Request, res: Response) {
     try {
-        const { phoneNumber, countryPrefix } = req.body;
+        const { phoneNumber, countryPrefix, email } = req.body;
         const authId = (req as any).authId;
 
-        await clientService.sendPhoneNumber({ authId, phoneNumber, countryPrefix });
+        let currentAuthId = authId;
+        if (!currentAuthId) {
+            const auth = await authService.findAuthByEmail(email);
+            if (!auth) {
+                return res.status(404).json({
+                    status: 'error',
+                    message: "Correo no encontrado",
+                });
+            }
+            currentAuthId = auth.id;
+        }
+
+        await clientService.sendPhoneNumber({ authId: currentAuthId, phoneNumber, countryPrefix });
 
         return res.status(200).json(
             {
@@ -75,10 +101,23 @@ export async function saveProfileHandler(req: Request, res: Response) {
         if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
         const authId = (req as any).authId;
+        const { email } = req.body;
+
+        let currentAuthId = authId;
+        if (!currentAuthId) {
+            const auth = await authService.findAuthByEmail(email);
+            if (!auth) {
+                return res.status(404).json({
+                    status: 'error',
+                    message: "Correo no encontrado",
+                });
+            }
+            currentAuthId = auth.id;
+        }
 
         const data = req.body;
 
-        const profile = await clientService.saveProfile({ authId, ...data });
+        const profile = await clientService.saveProfile({ authId: currentAuthId, ...data });
 
         res.json({ message: "Perfil guardado", profile });
     } catch (err: any) {
