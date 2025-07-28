@@ -191,9 +191,7 @@ export class ClientService {
             return clientPlain;
         }
         catch (error: any) {
-            if (transaction.finished !== 'commit' && transaction.finished !== 'rollback') {
-                await transaction.rollback();
-            }
+            await transaction.rollback();
             throw error;
         }
     }
