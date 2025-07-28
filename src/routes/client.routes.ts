@@ -44,8 +44,9 @@ router.post(
         check("firstSurname", "Primer apellido es obligatorio").notEmpty(),
         check("birthdayDate", "Fecha de nacimiento es obligatorio").notEmpty(),
         check("birthdayDate", "Fecha de nacimiento inválido").isISO8601(),
-        check("genderId", "El género es obligatorio").notEmpty(),
+        check("genderId", "El género es obligatorio").optional().notEmpty(),
         check("genderId")
+            .optional()
             .isUUID(4)
             .withMessage("El genderId debe ser un UUID válido"),
         check("countryPrefix", "El código del teléfono es obligatorio").optional().notEmpty(),

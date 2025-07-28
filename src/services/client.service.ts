@@ -125,8 +125,11 @@ export class ClientService {
                 firstSurname,
                 secondSurname,
                 birthdayDate: new Date(birthdayDate),
-                fk_gender_id: genderId,
             };
+
+            if (genderId) {
+                updateData.fk_gender_id = genderId;
+            }
 
             if (countryPrefix) {
                 updateData.countryPrefix = countryPrefix;
