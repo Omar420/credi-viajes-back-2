@@ -456,7 +456,7 @@ export async function verifySmsOTPHandler(req: Request, res: Response) {
         const authId = (req as any).authId;
         const {
             countryPrefix,
-            phonNumber,
+            phoneNumber,
             verifyCode,
             email
         } = req.body;
@@ -480,7 +480,7 @@ export async function verifySmsOTPHandler(req: Request, res: Response) {
                 status: "success",
                 headerTitle: "Verificación exitosa",
                 title: "Verificación exitosa",
-                message: `Tu número ${countryPrefix}-${phonNumber} se ha vinculado a tu cuenta.`,
+                message: `Tu número ${countryPrefix}-${phoneNumber} se ha vinculado a tu cuenta.`,
                 action: {
                     buttonText: "Continuar",
                     buttonCallback: "--"
