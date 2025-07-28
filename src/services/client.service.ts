@@ -113,17 +113,24 @@ export class ClientService {
                 addresses
             } = data;
 
-            const client = await ClientModel.create({
+            const clientData: any = {
                 firstName,
                 secondName,
                 firstSurname,
                 secondSurname,
-                countryPrefix,
-                phoneNumber,
                 birthdayDate: new Date(birthdayDate),
                 fk_gender_id: genderId,
-            },
-                { transaction });
+            };
+
+            if (countryPrefix) {
+                clientData.countryPrefix = countryPrefix;
+            }
+
+            if (phoneNumber) {
+                clientData.phoneNumber = phoneNumber;
+            }
+
+            const client = await ClientModel.create(clientData, { transaction });
 
             const addressPromises = addresses.map(async (addr) => {
                 const address = await AddressesModel.create(
