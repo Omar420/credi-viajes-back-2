@@ -72,9 +72,7 @@ export class ClientService {
 
         const auth = await AuthModel.findByPk(authId);
 
-        if (auth && auth.getDataValue('fk_client_id')) {
-            await ClientModel.update({ phoneNumber, countryPrefix }, { where: { id: auth.getDataValue('fk_client_id') } });
-        } else if (auth) {
+        if (auth && !auth.getDataValue('fk_client_id')) {
             const gender = await GenderModel.findOne();
             if (!gender) {
                 throw new Error("No genders found in the database.");
@@ -113,23 +111,10 @@ export class ClientService {
                 throw new Error("Auth record not found");
             }
 
-            let client = await ClientModel.findOne({ where: { id: auth.getDataValue('fk_client_id') }, transaction });
+            const client = await ClientModel.findOne({ where: { id: auth.getDataValue('fk_client_id') }, transaction });
 
             if (!client) {
-                const createData: any = {
-                    firstName,
-                    secondName,
-                    firstSurname,
-                    secondSurname,
-                    countryPrefix,
-                    phoneNumber,
-                    birthdayDate: new Date(birthdayDate),
-                };
-                if(genderId) {
-                    createData.fk_gender_id = genderId;
-                }
-                client = await ClientModel.create(createData, { transaction });
-                await auth.update({ fk_client_id: client.getDataValue('id') }, { transaction });
+                throw new Error("Client not found");
             }
 
             const updateData: any = {
@@ -154,28 +139,26 @@ export class ClientService {
 
             await client.update(updateData, { transaction });
 
-            if (addresses && addresses.length > 0) {
-                const addressPromises = addresses.map(async (addr) => {
-                    const address = await AddressesModel.create(
-                        {
-                            ...addr,
-                            fk_country_id: addr.countryId,
-                            fk_state_id: addr.stateId,
-                        },
-                        { transaction }
-                    );
+            const addressPromises = addresses.map(async (addr) => {
+                const address = await AddressesModel.create(
+                    {
+                        ...addr,
+                        fk_country_id: addr.countryId,
+                        fk_state_id: addr.stateId,
+                    },
+                    { transaction }
+                );
 
-                    await ClientsAddressModel.create(
-                        {
-                            fk_client_id: client.getDataValue('id'),
-                            fk_address_id: address.getDataValue('id'),
-                        },
-                        { transaction }
-                    );
-                });
+                await ClientsAddressModel.create(
+                    {
+                        fk_client_id: client.getDataValue('id'),
+                        fk_address_id: address.getDataValue('id'),
+                    },
+                    { transaction }
+                );
+            });
 
-                await Promise.all(addressPromises);
-            }
+            await Promise.all(addressPromises);
 
             await AuthModel.update(
                 { fk_client_id: client.getDataValue('id') },
