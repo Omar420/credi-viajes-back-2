@@ -1,7 +1,7 @@
 import { generatorJWT } from "@src/helpers/generator-jwt";
 import { CONFIG, MAIL } from "@src/constants/config-global";
 import { OTPService } from "./otp.service";
-import { AddressesModel, AuthModel, ClientModel, ClientsAddressModel, DocumentModel, DocumentTypesModel, GenderModel } from "@src/models";
+import { AddressesModel, AuthModel, ClientModel, ClientsAddressModel, DocumentModel, DocumentTypesModel, GenderModel, UserModel } from "@src/models";
 import { AuthService } from "./auth.service";
 import { ClientCreateEditAttributes, IClientPhoneAttributes, IClientInstance, IAuthAttributes } from "@src/types";
 import sequelize from "@src/config/connection";
@@ -136,8 +136,12 @@ export class ClientService {
                 await client.update(clientData, { transaction });
             } else {
                 client = await ClientModel.create(clientData, { transaction });
+                const user = await UserModel.create({
+                    fk_client_id: client.getDataValue('id'),
+                    fk_auth_id: authId,
+                }, { transaction });
                 await AuthModel.update(
-                    { fk_client_id: client.getDataValue('id') },
+                    { fk_client_id: client.getDataValue('id'), fk_user_id: user.getDataValue('id') },
                     { where: { id: authId }, transaction }
                 );
             }
