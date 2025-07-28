@@ -113,6 +113,8 @@ export class ClientService {
                 addresses
             } = data;
 
+            let client = await this.findClientByAuthId(authId);
+
             const clientData: any = {
                 firstName,
                 secondName,
@@ -130,33 +132,39 @@ export class ClientService {
                 clientData.phoneNumber = phoneNumber;
             }
 
-            const client = await ClientModel.create(clientData, { transaction });
-
-            const addressPromises = addresses.map(async (addr) => {
-                const address = await AddressesModel.create(
-                    {
-                        ...addr,
-                        fk_country_id: addr.countryId,
-                        fk_state_id: addr.stateId,
-                    },
-                    { transaction }
+            if (client) {
+                await client.update(clientData, { transaction });
+            } else {
+                client = await ClientModel.create(clientData, { transaction });
+                await AuthModel.update(
+                    { fk_client_id: client.getDataValue('id') },
+                    { where: { id: authId }, transaction }
                 );
+            }
 
-                await ClientsAddressModel.create(
-                    {
-                        fk_client_id: client.getDataValue('id'),
-                        fk_address_id: address.getDataValue('id'),
-                    },
-                    { transaction }
-                );
-            });
+            if (addresses && addresses.length > 0) {
+                await ClientsAddressModel.destroy({ where: { fk_client_id: client.getDataValue('id') }, transaction });
+                const addressPromises = addresses.map(async (addr) => {
+                    const address = await AddressesModel.create(
+                        {
+                            ...addr,
+                            fk_country_id: addr.countryId,
+                            fk_state_id: addr.stateId,
+                        },
+                        { transaction }
+                    );
 
-            await Promise.all(addressPromises);
+                    await ClientsAddressModel.create(
+                        {
+                            fk_client_id: client.getDataValue('id'),
+                            fk_address_id: address.getDataValue('id'),
+                        },
+                        { transaction }
+                    );
+                });
+                await Promise.all(addressPromises);
+            }
 
-            await AuthModel.update(
-                { fk_client_id: client.getDataValue('id') },
-                { where: { id: authId }, transaction }
-            );
 
             await transaction.commit();
 
@@ -171,7 +179,6 @@ export class ClientService {
                     as: 'clientAddress',
                     where: { fk_client_id: client.getDataValue('id') },
                 }],
-                transaction
             });
 
             (clientPlain as any).addresses = savedAddresses.map(a => a.get({ plain: true }));
