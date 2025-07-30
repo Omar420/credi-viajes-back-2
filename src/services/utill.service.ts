@@ -25,6 +25,7 @@ export class UtilService {
         return await CountriesModel.findAndCountAll({
             where: whereClause,
             order: [["name", "ASC"]],
+            attributes: ["id", "name", "code", "countryPrefix"],
             include: includeStates !== false
                 ? [
                     {
