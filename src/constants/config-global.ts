@@ -39,6 +39,7 @@ export const PATH_ROUTES: IPathRoutes = {
   bookings: "/api/bookings",
   kiu: "/api/kiu",
   payments: "/api/payments",
+  profile: "/api/profile",
   // bookingPassengers: "/api/booking-passengers",
   // bookingStatus: "/api/booking-status",
   // addresses: "/api/addresses",
