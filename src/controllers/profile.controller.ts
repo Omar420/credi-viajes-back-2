@@ -1,13 +1,15 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { validationResult } from "express-validator";
 
 import { ProfileService } from "@src/services";
+import { AuthenticatedRequest } from "@src/types";
 
 const profileService = new ProfileService();
 
-export async function getProfileHandler(req: Request, res: Response) {
+export async function getProfileHandler(req: AuthenticatedRequest, res: Response) {
   try {
     const { authId } = req;
+    if (!authId) return res.status(401).json({ message: "No autorizado" });
     const profile = await profileService.getProfile(authId);
     res.json(profile);
   } catch (err: any) {
@@ -18,7 +20,7 @@ export async function getProfileHandler(req: Request, res: Response) {
   }
 }
 
-export async function updateProfileHandler(req: Request, res: Response) {
+export async function updateProfileHandler(req: AuthenticatedRequest, res: Response) {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty())
@@ -28,6 +30,7 @@ export async function updateProfileHandler(req: Request, res: Response) {
       });
 
     const { authId } = req;
+    if (!authId) return res.status(401).json({ message: "No autorizado" });
     const profile = await profileService.updateProfile(authId, req.body);
     res.json({ message: "Perfil actualizado", profile });
   } catch (err: any) {
@@ -38,7 +41,7 @@ export async function updateProfileHandler(req: Request, res: Response) {
   }
 }
 
-export async function changePasswordHandler(req: Request, res: Response) {
+export async function changePasswordHandler(req: AuthenticatedRequest, res: Response) {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty())
@@ -48,6 +51,7 @@ export async function changePasswordHandler(req: Request, res: Response) {
       });
 
     const { authId } = req;
+    if (!authId) return res.status(401).json({ message: "No autorizado" });
     const { oldPassword, newPassword } = req.body;
     await profileService.changePassword(authId, oldPassword, newPassword);
     res.json({ message: "Contraseña actualizada" });
