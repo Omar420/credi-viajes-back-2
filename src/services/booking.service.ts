@@ -61,7 +61,11 @@ export class BookingService {
                 }))
             };
 
+            console.log("KIU Payload:", JSON.stringify(kiuPayload, null, 2));
+
             const kiuResponse: IKiuBookingResponse = await kiuService.createSmartBooking(kiuPayload);
+
+            console.log("KIU Response:", JSON.stringify(kiuResponse, null, 2));
 
             const bookingData = {
                 bookingReference: kiuResponse.booking.booking.recordLocator,
