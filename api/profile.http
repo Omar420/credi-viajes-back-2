@@ -7,6 +7,17 @@
 GET {{HOST}}/profile
 Authorization: Bearer {{TOKEN}}
 
+# Respuesta esperada:
+# {
+#   "id": "...",
+#   "firstName": "John",
+#   "firstSurname": "Doe",
+#   "birthdayDate": "1990-01-01T00:00:00.000Z",
+#   "email": "user@example.com",
+#   "username": "johndoe",
+#   "phoneNumber": "1234567890"
+# }
+
 ### 🔄 Actualizar Perfil
 PUT {{HOST}}/profile
 Authorization: Bearer {{TOKEN}}
@@ -18,6 +29,20 @@ Content-Type: application/json
   "birthdayDate": "1990-01-01"
 }
 
+# Respuesta esperada:
+# {
+#   "message": "Perfil actualizado",
+#   "profile": {
+#     "id": "...",
+#     "firstName": "John",
+#     "firstSurname": "Doe",
+#     "birthdayDate": "1990-01-01T00:00:00.000Z",
+#     "email": "user@example.com",
+#     "username": "johndoe",
+#     "phoneNumber": "1234567890"
+#   }
+# }
+
 ### 🔐 Cambiar Contraseña
 POST {{HOST}}/profile/change-password
 Authorization: Bearer {{TOKEN}}
@@ -27,3 +52,8 @@ Content-Type: application/json
   "oldPassword": "current_password",
   "newPassword": "new_strong_password"
 }
+
+# Respuesta esperada:
+# {
+#   "message": "Contraseña actualizada"
+# }
