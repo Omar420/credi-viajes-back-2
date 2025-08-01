@@ -11,20 +11,31 @@ Authorization: Bearer {{TOKEN}}
 # Respuesta esperada para un CLIENTE:
 # {
 #   "email": "client@example.com",
-#   "id": "...",
+#   "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
 #   "firstName": "John",
+#   "secondName": "Fitzgerald",
 #   "firstSurname": "Doe",
+#   "secondSurname": "Smith",
+#   "countryPrefix": "+1",
+#   "phoneNumber": "1234567890",
 #   "birthdayDate": "1990-01-01T00:00:00.000Z",
-#   ...
+#   "deleted": false,
+#   "createdAt": "2025-08-01T06:45:17.361Z",
+#   "updatedAt": "2025-08-01T06:45:17.361Z",
+#   "fk_gender_id": "g1h2i3j4-k5l6-7890-1234-567890abcdef"
 # }
 #
 # Respuesta esperada para un USUARIO:
 # {
 #   "email": "user@example.com",
-#   "id": "...",
+#   "id": "u1v2w3x4-y5z6-7890-1234-567890abcdef",
 #   "name": "Admin",
 #   "surname": "User",
-#   ...
+#   "phoneNumber": "0987654321",
+#   "deleted": false,
+#   "createdAt": "2025-08-01T06:45:17.361Z",
+#   "updatedAt": "2025-08-01T06:45:17.361Z",
+#   "fk_role_id": "r1s2t3u4-v5w6-7890-1234-567890abcdef"
 # }
 
 ### 📥 Obtener Perfil por Email
@@ -38,34 +49,33 @@ Authorization: Bearer {{TOKEN}}
 #   ...
 # }
 
-
-### 🔄 Actualizar Perfil
-# El cuerpo de la solicitud debe contener los campos correspondientes al tipo de perfil (CLIENTE o USUARIO).
-PUT {{HOST}}/profile
+### 🔄 Actualizar Perfil por Email (Parcial)
+PATCH {{HOST}}/profile/client@example.com
 Authorization: Bearer {{TOKEN}}
 Content-Type: application/json
 
-# Ejemplo para actualizar un perfil de CLIENTE:
-# {
-#   "firstName": "John",
-#   "firstSurname": "Doe",
-#   "birthdayDate": "1990-01-01"
-# }
-#
-# Ejemplo para actualizar un perfil de USUARIO:
-# {
-#   "name": "Admin",
-#   "surname": "User"
-# }
+# Ejemplo para actualizar un solo campo de un perfil de CLIENTE:
+{
+  "firstSurname": "Johnson"
+}
 
 # Respuesta esperada:
 # {
 #   "message": "Perfil actualizado",
-#   "profile": { ... }
+#   "profile": {
+#     "email": "client@example.com",
+#     "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+#     "firstName": "John",
+#     "secondName": "Fitzgerald",
+#     "firstSurname": "Johnson",
+#     "secondSurname": "Smith",
+#     ...
+#   }
 # }
 
 
 ### 🔐 Cambiar Contraseña
+# Este endpoint sigue funcionando para el usuario autenticado (el del token)
 POST {{HOST}}/profile/change-password
 Authorization: Bearer {{TOKEN}}
 Content-Type: application/json

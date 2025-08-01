@@ -33,18 +33,10 @@ export async function getProfileByEmailHandler(req: AuthenticatedRequest, res: R
   }
 }
 
-export async function updateProfileHandler(req: AuthenticatedRequest, res: Response) {
+export async function updateProfileByEmailHandler(req: AuthenticatedRequest, res: Response) {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty())
-      return res.status(400).json({
-        status: "error",
-        errors: errors.array(),
-      });
-
-    const { authId } = req;
-    if (!authId) return res.status(401).json({ message: "No autorizado" });
-    const profile = await profileService.updateProfile(authId, req.body);
+    const { email } = req.params;
+    const profile = await profileService.updateProfileByEmail(email, req.body);
     res.json({ message: "Perfil actualizado", profile });
   } catch (err: any) {
     return res.status(500).json({

@@ -31,44 +31,6 @@ export class ProfileService {
     }
   }
 
-  public async updateProfile(
-    authId: string,
-    data: ClientCreateEditAttributes | UserCreateEditAttributes
-  ) {
-    const auth = await authService.findAuthById(authId);
-    if (!auth) throw new Error("Usuario no encontrado");
-
-    if (auth.type === AuthType.CLIENT) {
-      const { fk_client_id } = auth;
-      if (!fk_client_id) throw new Error("Cliente no encontrado");
-      await ClientModel.update(data, { where: { id: fk_client_id } });
-      return await clientService.findClientByAuthId(authId);
-    } else {
-      const { fk_user_id } = auth;
-      if (!fk_user_id) throw new Error("Usuario no encontrado");
-      await UserModel.update(data, { where: { id: fk_user_id } });
-      return await userService.findUserByAuthId(authId);
-    }
-  }
-
-  public async changePassword(
-    authId: string,
-    oldPassword: string,
-    newPassword: string
-  ): Promise<void> {
-    const auth = await authService.findAuthById(authId);
-    if (!auth) throw new Error("Usuario no encontrado");
-
-    if (!auth.password) throw new Error("El usuario no tiene una contraseña asignada");
-
-    const isMatch = getBCryptCompare(oldPassword, auth.password);
-    if (!isMatch) throw new Error("La contraseña actual es incorrecta");
-
-    await authService.updateAuth(authId, {
-      password: newPassword,
-    });
-  }
-
   public async getProfileByEmail(email: string) {
     const auth = await authService.findAuthByEmail(email);
     if (!auth) throw new Error("Usuario no encontrado");
@@ -88,5 +50,43 @@ export class ProfileService {
         ...user.get({ plain: true }),
       };
     }
+  }
+
+  public async updateProfileByEmail(
+    email: string,
+    data: Partial<ClientCreateEditAttributes | UserCreateEditAttributes>
+  ) {
+    const auth = await authService.findAuthByEmail(email);
+    if (!auth) throw new Error("Usuario no encontrado");
+
+    if (auth.type === AuthType.CLIENT) {
+      const { fk_client_id } = auth;
+      if (!fk_client_id) throw new Error("Cliente no encontrado");
+      await ClientModel.update(data, { where: { id: fk_client_id } });
+      return await clientService.findClientByAuthId(auth.id);
+    } else {
+      const { fk_user_id } = auth;
+      if (!fk_user_id) throw new Error("Usuario no encontrado");
+      await UserModel.update(data, { where: { id: fk_user_id } });
+      return await userService.findUserByAuthId(auth.id);
+    }
+  }
+
+  public async changePassword(
+    authId: string,
+    oldPassword: string,
+    newPassword: string
+  ): Promise<void> {
+    const auth = await authService.findAuthById(authId);
+    if (!auth) throw new Error("Usuario no encontrado");
+
+    if (!auth.password) throw new Error("El usuario no tiene una contraseña asignada");
+
+    const isMatch = getBCryptCompare(oldPassword, auth.password);
+    if (!isMatch) throw new Error("La contraseña actual es incorrecta");
+
+    await authService.updateAuth(authId, {
+      password: newPassword,
+    });
   }
 }

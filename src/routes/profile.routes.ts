@@ -2,7 +2,7 @@ import { Router } from "express";
 import { check, body } from "express-validator";
 import {
   getProfileHandler,
-  updateProfileHandler,
+  updateProfileByEmailHandler,
   changePasswordHandler,
   getProfileByEmailHandler,
 } from "@src/controllers/profile.controller";
@@ -17,23 +17,7 @@ router.get("/", [validateJWTMiddleware], getProfileHandler);
 
 router.get("/:email", [validateJWTMiddleware], getProfileByEmailHandler);
 
-router.put(
-  "/",
-  [
-    validateJWTMiddleware,
-    body("firstName").notEmpty().withMessage("El nombre es obligatorio"),
-    body("firstSurname")
-      .notEmpty()
-      .withMessage("El primer apellido es obligatorio"),
-    body("birthdayDate")
-      .notEmpty()
-      .withMessage("La fecha de nacimiento es obligatoria")
-      .isISO8601()
-      .withMessage("La fecha de nacimiento debe ser una fecha válida"),
-    validateFieldsMiddleware,
-  ],
-  updateProfileHandler
-);
+router.patch("/:email", [validateJWTMiddleware], updateProfileByEmailHandler);
 
 router.post(
   "/change-password",
