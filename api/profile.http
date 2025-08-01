@@ -1,11 +1,5 @@
 @HOST=http://localhost:4050/api
 
-@TOKEN=
-
-@user_email=user@example.com
-
-@client_email=client@example.com
-
 ###
 # ----------------------------------------------------------------
 # ------------------- USER PROFILE ENDPOINTS ---------------------
@@ -13,6 +7,7 @@
 ###
 
 ### 📥 Obtener Perfil de Usuario por Email
+@user_email=user@example.com
 GET {{HOST}}/profile/user/{{user_email}}
 Authorization: Bearer {{TOKEN}}
 
@@ -53,7 +48,7 @@ Content-Type: application/json
 ###
 
 ### 📥 Obtener Perfil de Cliente por Email
-
+@client_email=client@example.com
 GET {{HOST}}/profile/client/{{client_email}}
 Authorization: Bearer {{TOKEN}}
 
