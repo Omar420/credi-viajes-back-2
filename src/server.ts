@@ -7,7 +7,7 @@ import { SequelizeStorage, Umzug } from "umzug";
 import { execSync } from "child_process";
 import { getVersion } from "@src/constants/version";
 import { IPathRoutes } from "./types";
-import { AuthRoutes, ClientRoutes, UsersRoutes, UtilRoutes, ProductRoutes, BookingRoutes, KiuRoutes, PaymentRoutes, UserProfileRoutes, ClientProfileRoutes } from "./routes";
+import { AuthRoutes, ClientRoutes, UsersRoutes, UtilRoutes, ProductRoutes, BookingRoutes, KiuRoutes, PaymentRoutes, UserProfileRoutes, ClientProfileRoutes, PasswordRoutes } from "./routes";
 
 export class Server {
   private app: Application;
@@ -109,6 +109,7 @@ export class Server {
     this.app.use(this.paths.payments, PaymentRoutes);
     this.app.use(this.paths.userProfile, UserProfileRoutes);
     this.app.use(this.paths.clientProfile, ClientProfileRoutes);
+    this.app.use(this.paths.password, PasswordRoutes);
     // this.app.use(this.paths.productCategory, ProductCategoryRoutes);
   }
 

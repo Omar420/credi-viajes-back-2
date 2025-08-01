@@ -8,3 +8,4 @@ export { default as KiuRoutes } from "./kiu.routes";
 export { default as PaymentRoutes } from "./payment.routes";
 export { default as UserProfileRoutes } from "./user-profile.routes";
 export { default as ClientProfileRoutes } from "./client-profile.routes";
+export { default as PasswordRoutes } from "./password.routes";

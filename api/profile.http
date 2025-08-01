@@ -84,3 +84,26 @@ Content-Type: application/json
 #   "message": "Perfil de cliente actualizado",
 #   "profile": { ... }
 # }
+
+
+###
+# -----------------------------------------------------------------
+# -------------------- PASSWORD ENDPOINT --------------------------
+# -----------------------------------------------------------------
+###
+
+### 🔐 Cambiar Contraseña
+# Este endpoint funciona para el usuario autenticado (el del token)
+POST {{HOST}}/password/change
+Authorization: Bearer {{TOKEN}}
+Content-Type: application/json
+
+{
+  "oldPassword": "current_password",
+  "newPassword": "new_strong_password"
+}
+
+# Respuesta esperada:
+# {
+#   "message": "Contraseña actualizada"
+# }

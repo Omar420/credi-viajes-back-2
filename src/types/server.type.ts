@@ -12,6 +12,7 @@ export interface IPathRoutes {
   payments: string;
   userProfile: string;
   clientProfile: string;
+  password?: string;
   // bookingPassengers: string;
   // bookingStatus: string;
   // addresses: string;
