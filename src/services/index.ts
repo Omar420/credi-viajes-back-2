@@ -8,7 +8,8 @@ export * from './utill.service';
 export * from './client.service';
 export * from './product.service';
 export * from './booking.service';
-export * from './profile.service';
+export * from './user-profile.service';
+export * from './client-profile.service';
 // Newly created services
 export * from './booking-passengers.service';
 // export * from './booking-status.service';
