@@ -11,12 +11,12 @@ export class UserProfileService {
     const auth = await authService.findAuthByEmail(email);
     if (!auth || auth.type !== 'user') throw new Error("Usuario no encontrado");
 
-    const user = await userService.findUserByAuthId(auth.id);
+    const user = await userService.findUserById(auth.fk_user_id!);
     if (!user) throw new Error("Perfil de usuario no encontrado");
 
     return {
       email: auth.email,
-      ...user.get({ plain: true }),
+      ...user,
     };
   }
 
@@ -31,6 +31,6 @@ export class UserProfileService {
     if (!fk_user_id) throw new Error("Usuario no encontrado");
 
     await UserModel.update(data, { where: { id: fk_user_id } });
-    return await userService.findUserByAuthId(auth.id);
+    return await userService.findUserById(fk_user_id);
   }
 }
