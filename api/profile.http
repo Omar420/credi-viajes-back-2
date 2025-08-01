@@ -1,0 +1,29 @@
+@HOST=http://localhost:4050/api
+@TOKEN=YOUR_AUTH_TOKEN_HERE
+
+### ℹ️ Perfil del Usuario Autenticado
+
+### 📥 Obtener Perfil
+GET {{HOST}}/profile
+Authorization: Bearer {{TOKEN}}
+
+### 🔄 Actualizar Perfil
+PUT {{HOST}}/profile
+Authorization: Bearer {{TOKEN}}
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "firstSurname": "Doe",
+  "birthdayDate": "1990-01-01"
+}
+
+### 🔐 Cambiar Contraseña
+POST {{HOST}}/profile/change-password
+Authorization: Bearer {{TOKEN}}
+Content-Type: application/json
+
+{
+  "oldPassword": "current_password",
+  "newPassword": "new_strong_password"
+}
