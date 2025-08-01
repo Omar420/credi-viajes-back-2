@@ -4,6 +4,7 @@ import {
   getProfileHandler,
   updateProfileHandler,
   changePasswordHandler,
+  getProfileByEmailHandler,
 } from "@src/controllers/profile.controller";
 import {
   validateFieldsMiddleware,
@@ -13,6 +14,8 @@ import {
 const router = Router();
 
 router.get("/", [validateJWTMiddleware], getProfileHandler);
+
+router.get("/:email", [validateJWTMiddleware], getProfileByEmailHandler);
 
 router.put(
   "/",

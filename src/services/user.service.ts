@@ -193,6 +193,16 @@ export class UserService {
         });
     }
 
+    async findUserByAuthId(authId: string): Promise<IUserInstance | null> {
+        return await UserModel.findOne({
+            include: [{
+                model: AuthModel,
+                as: 'auth',
+                where: { id: authId },
+            }],
+        });
+    }
+
 
     async findUserLoggedById(id: string): Promise<IUserInstance | null> {
         return await UserModel.findByPk(id, {

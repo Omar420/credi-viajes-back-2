@@ -20,6 +20,19 @@ export async function getProfileHandler(req: AuthenticatedRequest, res: Response
   }
 }
 
+export async function getProfileByEmailHandler(req: AuthenticatedRequest, res: Response) {
+  try {
+    const { email } = req.params;
+    const profile = await profileService.getProfileByEmail(email);
+    res.json(profile);
+  } catch (err: any) {
+    return res.status(500).json({
+      status: "error",
+      message: err.message,
+    });
+  }
+}
+
 export async function updateProfileHandler(req: AuthenticatedRequest, res: Response) {
   try {
     const errors = validationResult(req);

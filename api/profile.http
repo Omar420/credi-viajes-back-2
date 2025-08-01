@@ -2,46 +2,68 @@
 @TOKEN=YOUR_AUTH_TOKEN_HERE
 
 ### ℹ️ Perfil del Usuario Autenticado
+# El perfil devuelto dependerá del rol del usuario autenticado (CLIENTE o USUARIO).
 
-### 📥 Obtener Perfil
+### 📥 Obtener Perfil del usuario autenticado
 GET {{HOST}}/profile
 Authorization: Bearer {{TOKEN}}
 
-# Respuesta esperada:
+# Respuesta esperada para un CLIENTE:
 # {
+#   "email": "client@example.com",
 #   "id": "...",
 #   "firstName": "John",
 #   "firstSurname": "Doe",
 #   "birthdayDate": "1990-01-01T00:00:00.000Z",
+#   ...
+# }
+#
+# Respuesta esperada para un USUARIO:
+# {
 #   "email": "user@example.com",
-#   "username": "johndoe",
-#   "phoneNumber": "1234567890"
+#   "id": "...",
+#   "name": "Admin",
+#   "surname": "User",
+#   ...
 # }
 
+### 📥 Obtener Perfil por Email
+GET {{HOST}}/profile/user@example.com
+Authorization: Bearer {{TOKEN}}
+
+# Respuesta esperada (dependerá del rol del usuario con ese email):
+# {
+#   "email": "user@example.com",
+#   "id": "...",
+#   ...
+# }
+
+
 ### 🔄 Actualizar Perfil
+# El cuerpo de la solicitud debe contener los campos correspondientes al tipo de perfil (CLIENTE o USUARIO).
 PUT {{HOST}}/profile
 Authorization: Bearer {{TOKEN}}
 Content-Type: application/json
 
-{
-  "firstName": "John",
-  "firstSurname": "Doe",
-  "birthdayDate": "1990-01-01"
-}
+# Ejemplo para actualizar un perfil de CLIENTE:
+# {
+#   "firstName": "John",
+#   "firstSurname": "Doe",
+#   "birthdayDate": "1990-01-01"
+# }
+#
+# Ejemplo para actualizar un perfil de USUARIO:
+# {
+#   "name": "Admin",
+#   "surname": "User"
+# }
 
 # Respuesta esperada:
 # {
 #   "message": "Perfil actualizado",
-#   "profile": {
-#     "id": "...",
-#     "firstName": "John",
-#     "firstSurname": "Doe",
-#     "birthdayDate": "1990-01-01T00:00:00.000Z",
-#     "email": "user@example.com",
-#     "username": "johndoe",
-#     "phoneNumber": "1234567890"
-#   }
+#   "profile": { ... }
 # }
+
 
 ### 🔐 Cambiar Contraseña
 POST {{HOST}}/profile/change-password
