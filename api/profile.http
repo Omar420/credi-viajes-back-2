@@ -1,14 +1,58 @@
 @HOST=http://localhost:4050/api
-@TOKEN=YOUR_AUTH_TOKEN_HERE
 
-### ℹ️ Perfil del Usuario Autenticado
-# El perfil devuelto dependerá del rol del usuario autenticado (CLIENTE o USUARIO).
+###
+# ----------------------------------------------------------------
+# ------------------- USER PROFILE ENDPOINTS ---------------------
+# ----------------------------------------------------------------
+###
 
-### 📥 Obtener Perfil del usuario autenticado
-GET {{HOST}}/profile
+### 📥 Obtener Perfil de Usuario por Email
+@user_email=user@example.com
+GET {{HOST}}/profile/user/{{user_email}}
 Authorization: Bearer {{TOKEN}}
 
-# Respuesta esperada para un CLIENTE:
+# Respuesta esperada:
+# {
+#   "email": "user@example.com",
+#   "id": "u1v2w3x4-y5z6-7890-1234-567890abcdef",
+#   "name": "Admin",
+#   "surname": "User",
+#   "phoneNumber": "0987654321",
+#   "deleted": false,
+#   "createdAt": "2025-08-01T07:15:57.332Z",
+#   "updatedAt": "2025-08-01T07:15:57.332Z",
+#   "fk_role_id": "r1s2t3u4-v5w6-7890-1234-567890abcdef"
+# }
+
+### 🔄 Actualizar Perfil de Usuario por Email (Parcial)
+PATCH {{HOST}}/profile/user/{{user_email}}
+Authorization: Bearer {{TOKEN}}
+Content-Type: application/json
+
+# Ejemplo para actualizar un solo campo de un perfil de USUARIO:
+{
+  "surname": "Administrator"
+}
+
+# Respuesta esperada:
+# {
+#   "message": "Perfil de usuario actualizado",
+#   "profile": { ... }
+# }
+
+
+###
+# -----------------------------------------------------------------
+# ------------------ CLIENT PROFILE ENDPOINTS ---------------------
+# -----------------------------------------------------------------
+###
+
+### 📥 Obtener Perfil de Cliente por Email
+@client_email=client@example.com
+GET {{HOST}}/profile/client/{{client_email}}
+Authorization: Bearer {{TOKEN}}
+
+# Respuesta esperada:
 # {
 #   "email": "client@example.com",
 #   "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
@@ -20,37 +64,13 @@ Authorization: Bearer {{TOKEN}}
 #   "phoneNumber": "1234567890",
 #   "birthdayDate": "1990-01-01T00:00:00.000Z",
 #   "deleted": false,
-#   "createdAt": "2025-08-01T06:45:17.361Z",
-#   "updatedAt": "2025-08-01T06:45:17.361Z",
+#   "createdAt": "2025-08-01T07:15:57.332Z",
+#   "updatedAt": "2025-08-01T07:15:57.332Z",
 #   "fk_gender_id": "g1h2i3j4-k5l6-7890-1234-567890abcdef"
 # }
-#
-# Respuesta esperada para un USUARIO:
-# {
-#   "email": "user@example.com",
-#   "id": "u1v2w3x4-y5z6-7890-1234-567890abcdef",
-#   "name": "Admin",
-#   "surname": "User",
-#   "phoneNumber": "0987654321",
-#   "deleted": false,
-#   "createdAt": "2025-08-01T06:45:17.361Z",
-#   "updatedAt": "2025-08-01T06:45:17.361Z",
-#   "fk_role_id": "r1s2t3u4-v5w6-7890-1234-567890abcdef"
-# }
 
-### 📥 Obtener Perfil por Email
-GET {{HOST}}/profile/user@example.com
-Authorization: Bearer {{TOKEN}}
-
-# Respuesta esperada (dependerá del rol del usuario con ese email):
-# {
-#   "email": "user@example.com",
-#   "id": "...",
-#   ...
-# }
-
-### 🔄 Actualizar Perfil por Email (Parcial)
-PATCH {{HOST}}/profile/client@example.com
+### 🔄 Actualizar Perfil de Cliente por Email (Parcial)
+PATCH {{HOST}}/profile/client/{{client_email}}
 Authorization: Bearer {{TOKEN}}
 Content-Type: application/json
 
@@ -61,31 +81,6 @@ Content-Type: application/json
 
 # Respuesta esperada:
 # {
-#   "message": "Perfil actualizado",
-#   "profile": {
-#     "email": "client@example.com",
-#     "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-#     "firstName": "John",
-#     "secondName": "Fitzgerald",
-#     "firstSurname": "Johnson",
-#     "secondSurname": "Smith",
-#     ...
-#   }
-# }
-
-
-### 🔐 Cambiar Contraseña
-# Este endpoint sigue funcionando para el usuario autenticado (el del token)
-POST {{HOST}}/profile/change-password
-Authorization: Bearer {{TOKEN}}
-Content-Type: application/json
-
-{
-  "oldPassword": "current_password",
-  "newPassword": "new_strong_password"
-}
-
-# Respuesta esperada:
-# {
-#   "message": "Contraseña actualizada"
+#   "message": "Perfil de cliente actualizado",
+#   "profile": { ... }
 # }
