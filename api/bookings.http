@@ -1,70 +1,25 @@
 @HOST = https://qa.back.creditviajes.com/api
 @API_KEY = cfrw9D3kOE9RT6yG
 @TOKEN = YOUR_LOGIN_TOKEN
+@USER_EMAIL = omar.galindez@example.com
+@CONTACT_COUNTRY_ID = e5ab4079-d729-447d-ab52-92bf6f7df260
+@GENDER_ID_MALE = 91ca6a09-0055-486f-ab10-3d4cea31edec
+@NATIONALITY_ID_VE = e5ab4079-d729-447d-ab52-92bf6f7df260
 
 ###
 # --------------------------------------------------------------------------------------
 # BOOKING REQUESTS
 # --------------------------------------------------------------------------------------
-# This file contains examples for creating bookings.
+# This file contains examples for creating bookings with the new credit system.
 #
 # IMPORTANT:
-# - The `Authorization` header must contain a valid JWT token obtained from logging in.
-# - The `x-api-key` is a static key for the application.
-# - The `representative` field in the passengers array is ONLY required for infants (`INFT`).
-#   It should contain the `foid_id` of the accompanying adult.
-# - `order: 1` represents a one-way trip.
-# - `order: 2` represents the return flight for a round-trip.
-#
+# - The endpoint is now POST /bookings
+# - The user is identified by the top-level `email` field.
+# - `gender`, `nationality`, `issue_country`, and `countryCode` are now UUIDs.
+# - `document_type` is a single-letter code ('V', 'E', 'P').
+# - `foid_type` is left empty, as it's calculated by the backend.
+# - `totalAmount` is now required.
 # --------------------------------------------------------------------------------------
-
-### Create a One-Way Booking (Adult only)
-# @name createOneWayBooking
-POST {{HOST}}/bookings
-Content-Type: application/json
-Authorization: Bearer {{TOKEN}}
-x-api-key: {{API_KEY}}
-
-{
-  "email": "test.adult@example.com",
-  "phone": "+11234567890",
-  "countryCode": "US",
-  "carrier": "QL",
-  "passengers": [
-    {
-      "surname": "WAYNE",
-      "name": "BRUCE",
-      "gender": "M",
-      "foid_type": "ID",
-      "document_type": "I",
-      "foid_id": "987654321",
-      "date_of_birth": "30MAR85",
-      "passenger_type_code": "ADT",
-      "nationality": "US",
-      "issue_country": "US",
-      "expiration_date": "30MAR30"
-    }
-  ],
-  "air_itinerary_information": [
-    {
-      "order": 1,
-      "departure_information": {
-        "location_code": "JFK",
-        "date": "2025-09-10",
-        "time": "0800"
-      },
-      "arrival_information": {
-        "location_code": "LAX"
-      },
-      "flight_number": 2025,
-      "reservation_booking_designator_code": "N",
-      "number_in_party": 1,
-      "carrier": "QL"
-    }
-  ]
-}
-
-### --------------------------------------------------------------------------------------
 
 ### Create a Round-Trip Booking (Adult and Infant)
 # @name createRoundTripBookingWithInfant
@@ -74,36 +29,37 @@ Authorization: Bearer {{TOKEN}}
 x-api-key: {{API_KEY}}
 
 {
-  "email": "test.infant@example.com",
-  "phone": "+442071234567",
-  "countryCode": "GB",
+  "email": "{{USER_EMAIL}}",
+  "phone": "+584125551654",
+  "fk_contact_country_id": "{{CONTACT_COUNTRY_ID}}",
+  "totalAmount": 2450.75,
   "carrier": "QL",
   "passengers": [
     {
       "surname": "KENT",
       "name": "CLARK",
-      "gender": "M",
-      "foid_type": "PP",
+      "fk_gender_id": "{{GENDER_ID_MALE}}",
+      "foid_type": "",
       "document_type": "P",
       "foid_id": "A1B2C3D4E5",
-      "date_of_birth": "29FEB80",
+      "date_of_birth": "1980-02-29",
       "passenger_type_code": "ADT",
-      "nationality": "GB",
-      "issue_country": "GB",
-      "expiration_date": "29FEB28"
+      "fk_nationality_country_id": "{{NATIONALITY_ID_VE}}",
+      "fk_issue_country_id": "{{NATIONALITY_ID_VE}}",
+      "expiration_date": "2028-02-29"
     },
     {
       "surname": "KENT",
       "name": "JONATHAN",
-      "gender": "M",
-      "foid_type": "ID",
-      "document_type": "I",
+      "fk_gender_id": "{{GENDER_ID_MALE}}",
+      "foid_type": "",
+      "document_type": "V",
       "foid_id": "F6G7H8I9J0",
-      "date_of_birth": "15JUN23",
+      "date_of_birth": "2023-06-15",
       "passenger_type_code": "INFT",
-      "nationality": "GB",
-      "issue_country": "GB",
-      "expiration_date": "15JUN33",
+      "fk_nationality_country_id": "{{NATIONALITY_ID_VE}}",
+      "fk_issue_country_id": "{{NATIONALITY_ID_VE}}",
+      "expiration_date": "2033-06-15",
       "representative": "A1B2C3D4E5"
     }
   ],
@@ -140,11 +96,3 @@ x-api-key: {{API_KEY}}
     }
   ]
 }
-
-
-
-
-###
-I/flutter (19141): 📤 Enviando POST a: https://qa.back.creditviajes.com/api/booking
-I/flutter (19141): 📦 Body: {"email":"ogalindez420@gmail.com","phone":"4125551654","countryCode":"VE","carrier":"QL","passengers":[{"surname":"galindez","name":"Omar","gender":"M","foid_type":"ID","document_type":"I","foid_id":"26386392","date_of_birth":"25JUL02","passenger_type_code":"INFT","nationality":"VE","issue_country":"VE","expiration_date":"27DEC25"}],"air_itinerary_information":[]}
-I/flutter (19141): 🧾 Headers: {Content-Type: application/json, x-api-key: cfrw9D3kOE9RT6yG, Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJlMTU0YzdiMy02ZjM1LTQxYmEtODcxMy1lMmEyOGFiMTcwNmMiLCJpYXQiOjE3NTM0NzMxNjksImV4cCI6MTc1MzQ5MTE2OX0.NqPvJ8Wh6DhyZTyyXkZ2OXzjJ46aOFgLDjngsaVpJnU}
