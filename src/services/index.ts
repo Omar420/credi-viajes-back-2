@@ -8,6 +8,7 @@ export * from './utill.service';
 export * from './client.service';
 export * from './product.service';
 export * from './booking.service';
+export * from './payment.service'; // Added
 export * from './user-profile.service';
 export * from './client-profile.service';
 export * from './password.service';

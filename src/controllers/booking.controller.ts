@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { BookingService } from "@src/services";
 import { AuthModel } from "@src/models";
 import { ERROR_MESSAGES, SUCCESS_MESSAGES, INFO_MESSAGES } from "@src/constants/messages.global";
@@ -12,7 +12,6 @@ const bookingService = new BookingService();
 export const createSmartBooking = async (req: AuthenticatedRequest, res: Response) => {
     const payload = req.body as ISmartBookingRequest;
 
-    // Use email from payload to find the user, as requested.
     const { email } = payload;
     if (!email) {
         return res.status(400).json({ message: "El email del cliente es requerido en el cuerpo de la solicitud." });
@@ -25,7 +24,10 @@ export const createSmartBooking = async (req: AuthenticatedRequest, res: Respons
         }
         const userId = authUser.getDataValue('id');
 
-        const result = await bookingService.createSmartBooking(payload, userId);
+        const newBooking = await bookingService.createSmartBooking(payload, userId);
+
+        // Fetch the full booking details to return to the user
+        const result = await bookingService.getBookingById(newBooking.id);
 
         return res.status(201).json({
             message: SUCCESS_MESSAGES.SUCCESS_RESOURCE_CREATED,
@@ -62,7 +64,6 @@ export const getBookingById = async (req: AuthenticatedRequest, res: Response) =
         
         const isAdmin = roleCode === ROLES.ADMIN || roleCode === ROLES.SUPERADMIN;
 
-        // Verify ownership if not an admin
         if (!isAdmin && booking.fk_auth_id !== userId) {
             return res.status(403).json({ message: ERROR_MESSAGES.ERROR_FORBIDDEN_ACCESS });
         }
@@ -163,21 +164,15 @@ export const updateBookingStatus = async (req: AuthenticatedRequest, res: Respon
     }
     
     try {
-        const updatedBooking = await bookingService.updateBookingStatus(
+        await bookingService.updateBookingStatus(
             id, 
             fk_status_id!, 
             paymentSuccessful, 
             userId
         );
         
-        if (!updatedBooking) { 
-            return res.status(404).json({ 
-                message: ERROR_MESSAGES.ERROR_RESOURCE_NOT_FOUND 
-            });
-        }
         return res.status(200).json({
-            message: SUCCESS_MESSAGES.SUCCESS_RESOURCE_UPDATED,
-            data: updatedBooking
+            message: SUCCESS_MESSAGES.SUCCESS_RESOURCE_UPDATED
         });
     } catch (error: any) {
         console.error("Error updating booking status:", error);

@@ -21,6 +21,21 @@ InstallmentPlan.init({
     type: DataTypes.DECIMAL(5, 2),
     allowNull: false,
   },
+  initial_fee_percentage: {
+    type: DataTypes.DECIMAL(5, 2),
+    allowNull: false,
+    defaultValue: 100.00,
+  },
+  installment_percentage: {
+    type: DataTypes.DECIMAL(5, 2),
+    allowNull: false,
+    defaultValue: 0.00,
+  },
+  days_between_installments: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 30,
+  },
   is_active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
@@ -28,7 +43,7 @@ InstallmentPlan.init({
 }, {
   sequelize,
   modelName: 'InstallmentPlan',
-  tableName: 'installment_plans',
+  tableName: 'InstallmentPlans',
   timestamps: true,
 });
 
