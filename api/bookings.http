@@ -43,11 +43,11 @@ x-api-key: {{API_KEY}}
       "foid_type": "",
       "document_type": "P",
       "foid_id": "A1B2C3D4E5",
-      "date_of_birth": "1980-02-29",
+      "date_of_birth": "29FEB80",
       "passenger_type_code": "ADT",
       "fk_nationality_country_id": "{{NATIONALITY_ID_VE}}",
       "fk_issue_country_id": "{{NATIONALITY_ID_VE}}",
-      "expiration_date": "2028-02-29"
+      "expiration_date": "29FEB28"
     },
     {
       "surname": "KENT",
@@ -56,11 +56,11 @@ x-api-key: {{API_KEY}}
       "foid_type": "",
       "document_type": "V",
       "foid_id": "F6G7H8I9J0",
-      "date_of_birth": "2023-06-15",
+      "date_of_birth": "15JUN23",
       "passenger_type_code": "INFT",
       "fk_nationality_country_id": "{{NATIONALITY_ID_VE}}",
       "fk_issue_country_id": "{{NATIONALITY_ID_VE}}",
-      "expiration_date": "2033-06-15",
+      "expiration_date": "15JUN33",
       "representative": "A1B2C3D4E5"
     }
   ],
