@@ -33,10 +33,15 @@ const getKiuDocumentTypes = (docTypeCode: string) => {
     }
 };
 
-// Helper to parse ddMMMyy format
+const getKiuPassengerCode = (passengerType: string) => {
+    const upperType = passengerType.toUpperCase();
+    if (upperType.includes('ADULTO')) return 'ADT';
+    if (upperType.includes('NIÑO')) return 'CHD';
+    if (upperType.includes('INFANTE')) return 'INFT';
+    return 'ADT'; // Default to Adult
+};
+
 const parseDdmmyy = (dateString: string): Date => {
-    // This is a simplified parser. A robust solution might use a library with better parsing capabilities.
-    // Example: 04AUG98
     const monthMap: { [key: string]: number } = {
         JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5,
         JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11
@@ -44,15 +49,10 @@ const parseDdmmyy = (dateString: string): Date => {
     const day = parseInt(dateString.substring(0, 2), 10);
     const month = monthMap[dateString.substring(2, 5).toUpperCase()];
     let year = parseInt(dateString.substring(5, 7), 10);
-    // Assuming 20th vs 21st century
     year += (year > 50) ? 1900 : 2000;
-
-    if (isNaN(day) || month === undefined || isNaN(year)) {
-        throw new Error(`Invalid date format: ${dateString}`);
-    }
+    if (isNaN(day) || month === undefined || isNaN(year)) throw new Error(`Invalid date format: ${dateString}`);
     return new Date(year, month, day);
 }
-
 
 export class BookingService {
 
@@ -82,26 +82,34 @@ export class BookingService {
 
             const kiuPassengers = payload.passengers.map(p => {
                 const kiuDocs = getKiuDocumentTypes(p.document_type);
-                // The frontend is already sending the date in the format KIU expects (ddMMMyy)
-                // No transformation is needed for the KIU payload dates.
                 const passenger = {
-                    surname: p.surname, name: p.name, gender: genderMap.get(p.fk_gender_id),
-                    foid_type: kiuDocs.foid_type, document_type: kiuDocs.document_type, foid_id: p.foid_id,
+                    surname: p.surname,
+                    name: p.name,
+                    gender: genderMap.get(p.fk_gender_id),
+                    foid_type: kiuDocs.foid_type,
+                    document_type: kiuDocs.document_type,
+                    foid_id: p.foid_id,
                     date_of_birth: p.date_of_birth.toUpperCase(),
-                    passenger_type_code: p.passenger_type_code, nationality: countryMap.get(p.fk_nationality_country_id),
+                    passenger_type_code: getKiuPassengerCode(p.passenger_type_code),
+                    nationality: countryMap.get(p.fk_nationality_country_id),
                     issue_country: countryMap.get(p.fk_issue_country_id),
                     expiration_date: p.expiration_date.toUpperCase(),
                     representative: p.representative,
                 };
-                if (p.passenger_type_code.toUpperCase() !== 'INFT') delete passenger.representative;
+                if (getKiuPassengerCode(p.passenger_type_code) !== 'INFT') delete passenger.representative;
                 return passenger;
             });
+            console.log('Pasajeros transformados para KIU:', JSON.stringify(kiuPassengers, null, 2));
 
             const kiuPayload = {
-                email: payload.email, phone: payload.phone, countryCode: countryMap.get(payload.fk_contact_country_id),
-                carrier: payload.carrier, passengers: kiuPassengers, air_itinerary_information: payload.air_itinerary_information,
+                email: payload.email,
+                phone: payload.phone,
+                countryCode: countryMap.get(payload.fk_contact_country_id),
+                carrier: payload.carrier,
+                passengers: kiuPassengers,
+                air_itinerary_information: payload.air_itinerary_information,
             };
-            console.log('Payload enviado a KIU:', JSON.stringify(kiuPayload, null, 2));
+            console.log('Payload final enviado a KIU:', JSON.stringify(kiuPayload, null, 2));
 
             const kiuResponse: IKiuBookingResponse = await kiuService.createSmartBooking(kiuPayload);
             console.log('Respuesta de KIU:', JSON.stringify(kiuResponse, null, 2));
@@ -134,7 +142,6 @@ export class BookingService {
                 const docTypeId = docTypeIdMap.get(p.document_type);
                 if (!docTypeId) throw new CustomError(`Tipo de documento inválido: ${p.document_type}`, 400);
 
-                // Parse date from ddMMMyy to save in DB as yyyy-MM-dd
                 const dobForDb = format(parseDdmmyy(p.date_of_birth), 'yyyy-MM-dd');
 
                 const newPassenger = await PassengersModel.create({
@@ -142,7 +149,7 @@ export class BookingService {
                     dateOfBirth: dobForDb,
                     fk_nationality_country_id: p.fk_nationality_country_id,
                     fk_issue_country_id: p.fk_issue_country_id, fk_doc_type_id: docTypeId,
-                    documentNumber: p.foid_id, passengerType: p.passenger_type_code.toLowerCase(),
+                    documentNumber: p.foid_id, passengerType: getKiuPassengerCode(p.passenger_type_code).toLowerCase(),
                 }, { transaction });
                 passengerMap.set(p.foid_id, newPassenger.getDataValue('id'));
                 return newPassenger;
@@ -150,7 +157,7 @@ export class BookingService {
 
             await Promise.all(createdPassengers.map((p, index) => {
                 const representativeFoid = payload.passengers[index].representative;
-                if (p.getDataValue('passengerType') === 'infant' && representativeFoid) {
+                if (p.getDataValue('passengerType') === 'inft' && representativeFoid) {
                     const adultId = passengerMap.get(representativeFoid);
                     if (adultId) return p.update({ associatedAdultId: adultId }, { transaction });
                 }
@@ -163,7 +170,6 @@ export class BookingService {
 
             const installmentPlan = await InstallmentPlanModel.findOne({ where: { installments_count: 1, is_active: true }, transaction });
             if (!installmentPlan) throw new CustomError("Plan de pago por defecto (1 cuota) no encontrado o inactivo.", 500);
-            console.log('Plan de pago encontrado:', installmentPlan.getDataValue('name'));
 
             const totalAmount = newBooking.getDataValue('totalAmount');
             const totalWithInterest = totalAmount * (1 + installmentPlan.getDataValue('interest_rate') / 100);
@@ -175,7 +181,6 @@ export class BookingService {
                 total_paid: 0,
                 is_fully_paid: false,
             }, { transaction });
-            console.log('CreditPurchase creado:', creditPurchase.getDataValue('id'));
 
             const installmentsToCreate = [];
             const initialFeeAmount = totalWithInterest * (installmentPlan.getDataValue('initial_fee_percentage') / 100);
@@ -186,7 +191,6 @@ export class BookingService {
                 due_date: addHours(new Date(), 4),
                 status: 'pending',
             });
-            console.log('Cuota inicial generada. Vence en 4 horas. Monto:', initialFeeAmount);
 
             const remainingAmount = totalWithInterest - initialFeeAmount;
             const remainingInstallmentsCount = installmentPlan.getDataValue('installments_count') - 1;
@@ -206,16 +210,13 @@ export class BookingService {
             }
 
             await InstallmentModel.bulkCreate(installmentsToCreate, { transaction });
-            console.log(`${installmentsToCreate.length} cuotas creadas en total.`);
 
             await transaction.commit();
-            console.log('--- Transacción completada (commit) ---');
 
             return newBooking;
 
         } catch (error: unknown) {
             if (transaction) await transaction.rollback();
-            console.error('Error en createSmartBooking:', error);
             throw error;
         }
     }
