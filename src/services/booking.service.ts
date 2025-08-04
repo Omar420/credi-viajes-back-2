@@ -2,7 +2,6 @@ import { FindOptions, Transaction } from "sequelize";
 import sequelize from "@src/config/connection";
 import {
     BookingModel, 
-    ClientModel,  
     UserModel,    
     PassengersModel,
     BookingsPassengersModel,
@@ -10,13 +9,17 @@ import {
     BookingStatusModel, 
     CountriesModel,
     DocumentTypesModel,
-    GenderModel
+    GenderModel,
+    AuthModel,
+    AirItineraryInformationModel,
+    InstallmentModel
 } from "@src/models";
 import { ISmartBookingRequest, IBookingAttributes, IBookingUpdatePayload, IBookingServiceCreatePayload, IKiuBookingResponse } from "@src/types/booking.type";
 import { IPassengerDataInput } from "@src/types/passenger.type";
 import { generateUniqueBookingReference } from "@src/utils/generate-booking-reference"; 
 import { CustomError } from "@src/utils/custom-exception.error";
 import { KiuService } from "./kiu.service";
+import { parse, format } from 'date-fns';
 
 const kiuService = new KiuService();
 
@@ -39,45 +42,151 @@ export class BookingService {
         return null;
     }
 
-    public async createSmartBooking(payload: ISmartBookingRequest, userId: string): Promise<IKiuBookingResponse> {
+    public async createSmartBooking(payload: ISmartBookingRequest, userId: string): Promise<IBookingAttributes> {
         let transaction: Transaction | undefined;
         try {
             transaction = await sequelize.transaction();
 
-            const kiuPayload = {
-                ...payload,
-                passengers: payload.passengers.map(p => {
-                    if (p.passenger_type_code !== 'INFT') {
-                        delete p.representative;
-                    }
-                    return p;
-                }),
-                air_itinerary_information: payload.air_itinerary_information.map(item => ({
-                    ...item,
-                    departure_information: {
-                        ...item.departure_information,
-                        time: item.departure_information.time.replace(/:/g, '').slice(0, 4)
-                    }
-                }))
-            };
+            const auth = await AuthModel.findByPk(userId, { transaction });
+            if (!auth) {
+                throw new CustomError("Usuario no autenticado o no encontrado.", 404);
+            }
 
-            console.log("KIU Payload:", JSON.stringify(kiuPayload, null, 2));
+            // Data Transformation for KIU Payload
+            const countryIds = [
+                payload.fk_contact_country_id,
+                ...payload.passengers.map(p => p.fk_nationality_country_id),
+                ...payload.passengers.map(p => p.fk_issue_country_id)
+            ];
+            const genderIds = payload.passengers.map(p => p.fk_gender_id);
+            const docTypeIds = payload.passengers.map(p => p.document_type);
+
+            const [countries, genders, docTypes] = await Promise.all([
+                CountriesModel.findAll({ where: { id: [...new Set(countryIds)] }, transaction, attributes: ['id', 'code'] }),
+                GenderModel.findAll({ where: { id: [...new Set(genderIds)] }, transaction, attributes: ['id', 'code'] }),
+                DocumentTypesModel.findAll({ where: { id: [...new Set(docTypeIds)] }, transaction, attributes: ['id', 'code'] })
+            ]);
+
+            const countryMap = new Map(countries.map(c => [c.getDataValue('id'), c.getDataValue('code')]));
+            const genderMap = new Map(genders.map(g => [g.getDataValue('id'), g.getDataValue('code')]));
+            const docTypeMap = new Map(docTypes.map(d => [d.getDataValue('id'), d.getDataValue('code')]));
+
+            const kiuPassengers = payload.passengers.map(p => {
+                const passenger = {
+                    surname: p.surname,
+                    name: p.name,
+                    gender: genderMap.get(p.fk_gender_id),
+                    foid_type: p.foid_type,
+                    document_type: docTypeMap.get(p.document_type),
+                    foid_id: p.foid_id,
+                    date_of_birth: format(parse(p.date_of_birth, 'yyyy-MM-dd', new Date()), 'ddMMMyy').toUpperCase(),
+                    passenger_type_code: p.passenger_type_code,
+                    nationality: countryMap.get(p.fk_nationality_country_id),
+                    issue_country: countryMap.get(p.fk_issue_country_id),
+                    expiration_date: format(parse(p.expiration_date, 'yyyy-MM-dd', new Date()), 'ddMMMyy').toUpperCase(),
+                    representative: p.representative,
+                };
+                if (p.passenger_type_code !== 'INFT') {
+                    delete passenger.representative;
+                }
+                return passenger;
+            });
+
+            const kiuPayload = {
+                email: payload.email,
+                phone: payload.phone,
+                countryCode: countryMap.get(payload.fk_contact_country_id),
+                carrier: payload.carrier,
+                passengers: kiuPassengers,
+                air_itinerary_information: payload.air_itinerary_information,
+            };
 
             const kiuResponse: IKiuBookingResponse = await kiuService.createSmartBooking(kiuPayload);
 
-            console.log("KIU Response:", JSON.stringify(kiuResponse, null, 2));
+            const bookingStatusPending = await BookingStatusModel.findOne({ where: { code: 'PENDING' }, transaction });
+            if (!bookingStatusPending) {
+                throw new CustomError("Booking status 'PENDING' not found.", 500);
+            }
 
-            const bookingData = {
+            const firstSegment = payload.air_itinerary_information[0];
+            const lastSegment = payload.air_itinerary_information[payload.air_itinerary_information.length - 1];
+
+            const newBooking = await BookingModel.create({
+                contactEmail: payload.email,
+                contactPhone: payload.phone,
+                fk_contact_country_id: payload.fk_contact_country_id,
+                fk_auth_id: auth.getDataValue('id'),
+                totalAmount: payload.totalAmount,
+                passengerCount: payload.passengers.length,
                 bookingReference: kiuResponse.booking.booking.recordLocator,
                 kiu_response: kiuResponse,
-                // ... Mapea el resto de los datos necesarios
-            };
+                fk_status_id: bookingStatusPending.getDataValue('id'),
+                departureDate: firstSegment.departure_information.date,
+                returnDate: lastSegment.departure_information.date,
+                fk_created_by_id: userId,
+                fk_updated_by_id: userId,
+            }, { transaction });
 
-            // const newBooking = await BookingModel.create(bookingData, { transaction });
+            const itineraryData = payload.air_itinerary_information.map(item => ({
+                ...item,
+                fk_booking_id: newBooking.getDataValue('id'),
+                departure_location_code: item.departure_information.location_code,
+                departure_date: item.departure_information.date,
+                departure_time: item.departure_information.time,
+                arrival_location_code: item.arrival_information.location_code,
+            }));
+            await AirItineraryInformationModel.bulkCreate(itineraryData, { transaction });
+
+            const passengerMap = new Map();
+            const passengerCreationPromises = payload.passengers.map(async (p) => {
+                const newPassenger = await PassengersModel.create({
+                    firstSurname: p.surname,
+                    firstName: p.name,
+                    fk_gender_id: p.fk_gender_id,
+                    dateOfBirth: p.date_of_birth,
+                    fk_nationality_country_id: p.fk_nationality_country_id,
+                    fk_issue_country_id: p.fk_issue_country_id,
+                    fk_doc_type_id: p.document_type,
+                    documentNumber: p.foid_id,
+                    passengerType: p.passenger_type_code.toLowerCase(),
+                }, { transaction });
+                passengerMap.set(p.foid_id, newPassenger.getDataValue('id'));
+                return newPassenger;
+            });
+            const createdPassengers = await Promise.all(passengerCreationPromises);
+
+            await Promise.all(createdPassengers.map(async (p, index) => {
+                const representativeFoid = payload.passengers[index].representative;
+                if (p.getDataValue('passengerType') === 'infant' && representativeFoid) {
+                    const adultId = passengerMap.get(representativeFoid);
+                    if (adultId) {
+                        await p.update({ associatedAdultId: adultId }, { transaction });
+                    }
+                }
+            }));
+
+            const bookingPassengersEntries = createdPassengers.map(p => ({
+                fk_booking_id: newBooking.getDataValue('id'),
+                fk_passenger_id: p.getDataValue('id'),
+            }));
+            await BookingsPassengersModel.bulkCreate(bookingPassengersEntries, { transaction });
+
+            const dueDate = new Date();
+            dueDate.setHours(dueDate.getHours() + 4);
+            await InstallmentModel.create({
+                fk_booking_id: newBooking.getDataValue('id'),
+                amount_due: newBooking.getDataValue('totalAmount'),
+                due_date: dueDate,
+                status: 'pending',
+            }, { transaction });
 
             await transaction.commit();
 
-            return kiuResponse;
+            const result = await this.getBookingById(newBooking.getDataValue('id'));
+            if (!result) {
+                throw new CustomError("Error fetching created booking", 500);
+            }
+            return result;
 
         } catch (error: unknown) {
             if (transaction) await transaction.rollback();
@@ -85,80 +194,12 @@ export class BookingService {
         }
     }
 
-    public async createBooking(
-    payload: IBookingServiceCreatePayload, 
-    userId: string
-): Promise<IBookingAttributes> {
-    let transaction: Transaction | undefined;
-    try {
-        transaction = await sequelize.transaction();
-
-        const bookingReference = payload.bookingReference || await generateUniqueBookingReference();
-        
-        const createdBooking = await BookingModel.create({
-            name: payload.name,
-            description: payload.description,
-            totalAmount: payload.totalAmount,
-            paymentSuccessful: payload.paymentSuccessful,
-            bookingReference,
-            notes: payload.notes,
-            departureDate: payload.departureDate,
-            returnDate: payload.returnDate,
-            fk_status_id: payload.fk_status_id,
-            fk_origin_id: payload.fk_origin_id,
-            fk_destination_id: payload.fk_destination_id,
-            fk_client_id: payload.fk_client_id,
-            passengerCount: payload.passengerCount,
-            fk_created_by_id: payload.fk_created_by_id,
-            fk_updated_by_id: payload.fk_updated_by_id,
-        }, { transaction });
-
-        const bookingPassengersEntries = await Promise.all(
-            payload.passengers.map(async (passengerData) => {
-                const newPassenger = await PassengersModel.create({
-                    firstSurname: passengerData.firstSurname,
-                    firstName: passengerData.firstName,
-                    middleName: passengerData.middleName,
-                    secondSurname: passengerData.secondSurname,
-                    fk_gender_id: passengerData.fk_gender_id,
-                    dateOfBirth: passengerData.dateOfBirth,
-                    fk_nationality_country_id: passengerData.fk_nationality_country_id,
-                    fk_doc_type_id: passengerData.fk_doc_type_id,
-                    documentNumber: passengerData.documentNumber,
-                    passengerType: passengerData.passengerType,
-                    associatedAdultId: passengerData.associatedAdultId,
-                }, { transaction });
-
-                return {
-                    fk_booking_id: createdBooking.getDataValue('id'),
-                    fk_passenger_id: newPassenger.getDataValue('id')
-                };
-            })
-        );
-
-        await BookingsPassengersModel.bulkCreate(bookingPassengersEntries, { transaction });
-        await transaction.commit();
-
-        const result = await this.getBookingById(createdBooking.getDataValue('id'));
-        if (!result) {
-            throw new CustomError("Error fetching created booking", 500);
-        }
-
-        return result;
-
-    } catch (error: unknown) {
-        if (transaction) await transaction.rollback();
-        throw error;
-    }
-}
-
     public async getBookingById(id: string, includePassengers: boolean = true): Promise<IBookingAttributes | null> {
         try {
             const includes: any[] = [
                 { model: BookingStatusModel, as: 'status' },
-                { model: DestinationsModel, as: 'origin' },
-                { model: DestinationsModel, as: 'destination' },
-                { model: ClientModel, as: 'client', include: [{ model: UserModel, as: 'user', attributes: ['id', 'email', 'username'] }] },
+                { model: AirItineraryInformationModel, as: 'airItineraryInformation' },
+                { model: AuthModel, as: 'auth', include: [{ model: UserModel, as: 'user', attributes: ['id', 'email', 'username'] }] },
                 { model: UserModel, as: 'createdBy', attributes: ['id', 'username'] },
                 { model: UserModel, as: 'updatedBy', attributes: ['id', 'username'] },
             ];
@@ -171,6 +212,7 @@ export class BookingService {
                     include: [
                         { model: GenderModel, as: 'gender' },
                         { model: CountriesModel, as: 'nationality' },
+                        { model: CountriesModel, as: 'issueCountry' },
                         { model: DocumentTypesModel, as: 'documentType' },
                     ]
                 });
@@ -184,13 +226,12 @@ export class BookingService {
         }
     }
 
-    public async getBookingsByClientId(clientId: string, options?: FindOptions<IBookingAttributes>): Promise<{ rows: IBookingAttributes[], count: number }> {
+    public async getBookingsByAuthId(authId: string, options?: FindOptions<IBookingAttributes>): Promise<{ rows: IBookingAttributes[], count: number }> {
         try {
             const defaultOptions: FindOptions<IBookingAttributes> = {
-                where: { fk_client_id: clientId, deleted: false },
+                where: { fk_auth_id: authId, deleted: false },
                 include: [
                     { model: BookingStatusModel, as: 'status', attributes: ['id', 'name', 'code'] },
-                    { model: DestinationsModel, as: 'destination', attributes: ['id', 'name', 'code'] },
                 ],
                 order: [['createdAt', 'DESC']],
             };
@@ -202,7 +243,7 @@ export class BookingService {
             const { rows, count } = await BookingModel.findAndCountAll(finalOptions);
             return { rows: rows.map(r => r.get({ plain: true }) as IBookingAttributes), count };
         } catch (error: any) {
-            console.error("Error fetching bookings by client ID in service:", error);
+            console.error("Error fetching bookings by auth ID in service:", error);
             throw new CustomError(`Error obteniendo reservas del cliente: ${error.message}`, 500);
         }
     }
@@ -213,8 +254,7 @@ export class BookingService {
                 where: { deleted: false },
                  include: [
                     { model: BookingStatusModel, as: 'status', attributes: ['id', 'name', 'code'] },
-                    { model: DestinationsModel, as: 'destination', attributes: ['id', 'name', 'code'] },
-                    { model: ClientModel, as: 'client', include: [{model: UserModel, as: 'user', attributes: ['id', 'email', 'username']}] },
+                    { model: AuthModel, as: 'auth', include: [{model: UserModel, as: 'user', attributes: ['id', 'email', 'username']}] },
                 ],
                 order: [['createdAt', 'DESC']],
             };
@@ -230,54 +270,6 @@ export class BookingService {
         }
     }
 
-
-    public async updateBooking(id: string, payload: IBookingUpdatePayload, userId: string): Promise<IBookingAttributes | null> {
-        let transaction: Transaction | undefined;
-        try {
-            transaction = await sequelize.transaction();
-            const bookingInstance = await BookingModel.findByPk(id, { transaction });
-            if (!bookingInstance || bookingInstance.get('deleted')) {
-                throw new CustomError( "Reserva no encontrada o ha sido eliminada.", 404);
-            }
-
-            const updateData: Partial<IBookingAttributes> & { fk_updated_by_id: string } = {
-                name: payload.name,
-                description: payload.description,
-                totalAmount: payload.totalAmount,
-                paymentSuccessful: payload.paymentSuccessful,
-                notes: payload.notes,
-                departureDate: payload.departureDate ? new Date(payload.departureDate) : undefined,
-                returnDate: payload.returnDate ? new Date(payload.returnDate) : undefined,
-                fk_status_id: payload.fk_status_id,
-                fk_origin_id: payload.fk_origin_id,
-                fk_destination_id: payload.fk_destination_id,
-                fk_updated_by_id: userId,
-            };
-            Object.keys(updateData).forEach(key => updateData[key as keyof typeof updateData] === undefined && delete updateData[key as keyof typeof updateData]);
-
-
-            if (updateData.fk_status_id) {
-                const statusExists = await BookingStatusModel.findByPk(payload.fk_status_id, { transaction });
-                if (!statusExists) {
-                    throw new CustomError("El estado proporcionado no es válido.", 400);
-                }
-            }
-            
-            await bookingInstance.update(updateData, { transaction });
-            await transaction.commit();
-            
-            const result = await this.getBookingById(id);
-            if (!result) throw new CustomError("Error fetching updated booking details.", 500); 
-            return result;
-
-        } catch (error: any) {
-            if (transaction) await transaction.rollback();
-            if (error instanceof CustomError) throw error;
-            console.error("Error updating booking in service:", error);
-            throw new CustomError(`Error actualizando reserva: ${error.message}`, 500);
-        }
-    }
-    
     public async updateBookingStatus(id: string, statusId: string, paymentSuccessful: boolean | undefined, userId: string): Promise<IBookingAttributes | null> {
         let transaction: Transaction | undefined;
         try {
@@ -312,7 +304,6 @@ export class BookingService {
         }
     }
 
-
     public async cancelBooking(id: string, userId: string): Promise<boolean> {
         let transaction: Transaction | undefined;
         try {
@@ -346,22 +337,6 @@ export class BookingService {
             if (error instanceof CustomError) throw error;
             console.error("Error cancelling booking in service:", error);
             throw new CustomError(`Error cancelando la reserva: ${error.message}`, 500);
-        }
-    }
-    
-    public async deleteBooking(id: string, userId: string): Promise<boolean> {
-        try {
-            const bookingInstance = await BookingModel.findByPk(id);
-            if (!bookingInstance || bookingInstance.get('deleted')) {
-                 throw new CustomError("Reserva no encontrada.", 404);
-            }
-
-            await bookingInstance.update({ deleted: true, fk_updated_by_id: userId });
-            return true;
-        } catch (error: any) {
-            if (error instanceof CustomError) throw error;
-            console.error("Error deleting booking in service:", error);
-            throw new CustomError(`Error eliminando la reserva: ${error.message}`, 500);
         }
     }
 }

@@ -22,7 +22,7 @@ export const getAvailabilityFlights = async (req: Request, res: Response) => {
 
 export const getSmartSearch = async (req: Request, res: Response) => {
   try {
-    const data: ISmartBookingRequest = req.body;
+    const data: KiuSmartSearchRequest = req.body;
     const response = await kiuService.getSmartSearch(data);
     res.status(200).json(response);
   } catch (error: any) {

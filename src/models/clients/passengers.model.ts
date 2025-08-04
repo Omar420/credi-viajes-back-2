@@ -17,6 +17,11 @@ const Passenger = sequelize.define(
             type: DataTypes.STRING(50),
             allowNull: false,
         },
+        // País de emisión del documento (Requerido) -> fk_issue_country_id
+        fk_issue_country_id: {
+            type: DataTypes.UUID,
+            allowNull: false,
+        },
         // Nombre (Requerido) -> firstName
         firstName: {
             type: DataTypes.STRING(50),
@@ -128,6 +133,13 @@ Passenger.belongsTo(DocumentTypesModel, {
 Passenger.belongsTo(CountriesModel, {
     foreignKey: 'fk_nationality_country_id',
     as: 'nationality', // Alias añadido
+    targetKey: 'id',
+});
+
+// Relación con CountriesModel para País de Emisión del Documento
+Passenger.belongsTo(CountriesModel, {
+    foreignKey: 'fk_issue_country_id',
+    as: 'issueCountry',
     targetKey: 'id',
 });
 // CountriesModel.hasMany(Passenger, { // Se necesitaría añadir en CountriesModel si se quiere la relación inversa explícita

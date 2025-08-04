@@ -5,16 +5,16 @@ export type PassengerType = 'adult' | 'child' | 'infant';
 export interface ISmartBookingPassenger {
     surname: string;
     name: string;
-    gender: string;
+    fk_gender_id: string;
     foid_type: string;
     document_type: string;
     foid_id: string;
     date_of_birth: string;
     passenger_type_code: string;
-    nationality: string;
-    issue_country: string;
+    fk_nationality_country_id: string;
+    fk_issue_country_id: string;
     expiration_date: string;
-    representative?: number;
+    representative?: string;
 }
 
 export interface IPassengerDataBase { // Campos base comunes

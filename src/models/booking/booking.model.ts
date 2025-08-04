@@ -1,9 +1,8 @@
 import { DataTypes } from "sequelize";
 import sequelize from "@src/config/connection";
-import { ClientModel } from "../clients";
-import { DestinationsModel } from "../shared";
+import { CountriesModel, DestinationsModel } from "../shared";
 import { BookingStatusModel } from ".";
-import { UserModel } from "../users";
+import { AuthModel, UserModel } from "../users";
 
 const Booking = sequelize.define(
     "booking",
@@ -13,6 +12,22 @@ const Booking = sequelize.define(
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
         },
+        contactEmail: {
+            type: DataTypes.STRING(100),
+            allowNull: false,
+        },
+        contactPhone: {
+            type: DataTypes.STRING(20),
+            allowNull: false,
+        },
+        fk_contact_country_id: {
+            type: DataTypes.UUID,
+            allowNull: false,
+        },
+        fk_auth_id: {
+            type: DataTypes.UUID,
+            allowNull: false,
+        },
         name: {
             type: DataTypes.STRING(100),
             allowNull: true,
@@ -21,7 +36,7 @@ const Booking = sequelize.define(
             type: DataTypes.TEXT,
             allowNull: true,
         },
-        price: { 
+        price: {
             type: DataTypes.DECIMAL(10, 2),
             allowNull: true,
         },
@@ -109,10 +124,21 @@ Booking.belongsTo(DestinationsModel, {
     as: 'destination',
 });
 
-Booking.belongsTo(ClientModel, {
-    foreignKey: 'fk_client_id',
+Booking.belongsTo(AuthModel, {
+    foreignKey: 'fk_auth_id',
     targetKey: 'id',
-    as: 'client'
+    as: 'auth'
+});
+AuthModel.hasMany(Booking, {
+    foreignKey: 'fk_auth_id',
+    sourceKey: 'id',
+    as: 'bookings'
+});
+
+Booking.belongsTo(CountriesModel, {
+    foreignKey: 'fk_contact_country_id',
+    targetKey: 'id',
+    as: 'contactCountry'
 });
 
 Booking.belongsTo(UserModel, {

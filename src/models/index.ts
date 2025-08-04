@@ -5,3 +5,4 @@ export * from './products';
 export * from './shared';
 export * from './users';
 export * from './otp';
+export * from './payment';

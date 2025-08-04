@@ -1,9 +1,10 @@
-import { IPassengerDataInput,  IPassengerSummary, ISmartBookingPassenger } from "./passenger.type";
+import { IPassengerDataInput,  IPassengerSummary, ISmartBookingPassenger, IPassengerAttributes } from "./passenger.type";
 import { 
     IBookingStatusSummary, 
     IClientSummary, 
     IDestinationSummary, 
-    IUserSummary 
+    IUserSummary,
+    ICountrySummary
 } from "./shared.type";
 
 export interface IKiuBookingResponse {
@@ -31,7 +32,8 @@ export interface IKiuBooking {
 export interface ISmartBookingRequest {
     email: string;
     phone: string;
-    countryCode: string;
+    fk_contact_country_id: string;
+    totalAmount: number;
     carrier: string;
     passengers: ISmartBookingPassenger[];
     air_itinerary_information: IAirItineraryInformation[];
@@ -152,26 +154,31 @@ export interface IBookingAttributes {
     paymentSuccessful: boolean;
     bookingReference: string;
     notes?: string | null;
-    departureDate: Date; // Model uses DATE, service might return as Date object
+    departureDate: Date;
     returnDate?: Date | null;
     deleted: boolean;
+    contactEmail: string;
+    contactPhone: string;
+    fk_contact_country_id: string;
+    fk_auth_id: string;
     fk_status_id: string;
-    fk_origin_id: string;
-    fk_destination_id: string;
-    fk_client_id: string;
+    fk_origin_id?: string | null; // Can be optional if not a flight booking
+    fk_destination_id?: string | null; // Can be optional
     fk_created_by_id: string;
     fk_updated_by_id: string;
     createdAt?: Date;
     updatedAt?: Date;
 
     // Optional populated associations, matching service includes
-    status?: IBookingStatusSummary; // Or full IBookingStatusAttributes if needed
-    origin?: IDestinationSummary;   // Or full IDestinationAttributes
-    destination?: IDestinationSummary; // Or full IDestinationAttributes
-    client?: IClientSummary;       // Or full IClientAttributes
-    createdBy?: IUserSummary;      // Or full IUserAttributes
-    updatedBy?: IUserSummary;      // Or full IUserAttributes
-    // passengers?: IPassengerDetails[]; // Array de IPassengerDetails
+    status?: IBookingStatusSummary;
+    origin?: IDestinationSummary;
+    destination?: IDestinationSummary;
+    auth?: any; // Replace with a proper IAuthSummary if available
+    contactCountry?: ICountrySummary;
+    createdBy?: IUserSummary;
+    updatedBy?: IUserSummary;
+    passengers?: IPassengerAttributes[];
+    airItineraryInformation?: IAirItineraryInformation[];
 }
 
 // For BookingService.createBooking method - data strictly for the Booking table

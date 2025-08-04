@@ -1,6 +1,5 @@
 import axios from 'axios';
-import { KiuAvailabilityFlightsRequest, KiuSmartSearchRequest } from '@src/types/kiu.type';
-import { ISmartBookingRequest } from '@src/types/booking.type';
+import { KiuAvailabilityFlightsRequest, KiuSmartSearchRequest, IKiuSmartBookingPayload } from '@src/types/kiu.type';
 
 const API_BASE_URL_KIU = process.env.API_BASE_URL_KIU;
 const API_KEY_KIU = process.env.API_KEY_KIU;
@@ -21,7 +20,7 @@ export class KiuService {
     return response.data;
   }
 
-  async getSmartSearch(data: ISmartBookingRequest) {
+  async getSmartSearch(data: KiuSmartSearchRequest) {
     const response = await axios.post(
       `${API_BASE_URL_KIU}/kiu/smart-search?integrationID=${KIU_INTEGRATION_ID}`,
       data,
@@ -35,7 +34,7 @@ export class KiuService {
     return response.data;
   }
 
-  async createSmartBooking(data: ISmartBookingRequest) {
+  async createSmartBooking(data: IKiuSmartBookingPayload) {
     const response = await axios.post(
       `${API_BASE_URL_KIU}/kiu/smart-booking?integrationID=${KIU_INTEGRATION_ID}`,
       data,
