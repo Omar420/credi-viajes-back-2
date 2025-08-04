@@ -30,7 +30,8 @@ export interface IKiuBooking {
 }
 
 export interface ISmartBookingRequest {
-    email: string;
+    authEmail: string; // Email for identifying the Auth user
+    email: string; // Email for contact purposes
     phone: string;
     fk_contact_country_id: string;
     totalAmount: number;

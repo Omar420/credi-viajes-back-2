@@ -82,14 +82,16 @@ export class BookingService {
             if (!bookingStatusPending) throw new CustomError("Booking status 'PENDING' not found.", 500);
 
             const firstSegment = payload.air_itinerary_information[0];
-            const lastSegment = payload.air_itinerary_information[payload.air_itinerary_information.length - 1];
+            const isRoundTrip = payload.air_itinerary_information.length > 1;
+            const lastSegment = isRoundTrip ? payload.air_itinerary_information[payload.air_itinerary_information.length - 1] : null;
 
             const newBooking = await BookingModel.create({
                 contactEmail: payload.email, contactPhone: payload.phone, fk_contact_country_id: payload.fk_contact_country_id,
                 fk_auth_id: auth.getDataValue('id'), totalAmount: payload.totalAmount, passengerCount: payload.passengers.length,
                 bookingReference: kiuResponse.booking.booking.recordLocator, kiu_response: kiuResponse,
                 fk_status_id: bookingStatusPending.getDataValue('id'), departureDate: firstSegment.departure_information.date,
-                returnDate: lastSegment.departure_information.date, fk_created_by_id: userId, fk_updated_by_id: userId,
+                returnDate: lastSegment ? lastSegment.departure_information.date : null,
+                fk_created_by_id: userId, fk_updated_by_id: userId,
             }, { transaction });
 
             await AirItineraryInformationModel.bulkCreate(payload.air_itinerary_information.map(item => ({

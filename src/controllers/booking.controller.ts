@@ -12,15 +12,15 @@ const bookingService = new BookingService();
 export const createSmartBooking = async (req: AuthenticatedRequest, res: Response) => {
     const payload = req.body as ISmartBookingRequest;
 
-    const { email } = payload;
-    if (!email) {
-        return res.status(400).json({ message: "El email del cliente es requerido en el cuerpo de la solicitud." });
+    const { authEmail } = payload;
+    if (!authEmail) {
+        return res.status(400).json({ message: "El email de autenticación (authEmail) es requerido." });
     }
 
     try {
-        const authUser = await AuthModel.findOne({ where: { email } });
+        const authUser = await AuthModel.findOne({ where: { email: authEmail } });
         if (!authUser) {
-            return res.status(404).json({ message: `Usuario con email ${email} no encontrado.` });
+            return res.status(404).json({ message: `Usuario con email ${authEmail} no encontrado.` });
         }
         const userId = authUser.getDataValue('id');
 
