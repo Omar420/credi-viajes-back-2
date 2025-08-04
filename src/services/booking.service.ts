@@ -35,9 +35,9 @@ const getKiuDocumentTypes = (docTypeCode: string) => {
 
 const getKiuPassengerCode = (passengerType: string) => {
     const upperType = passengerType.toUpperCase();
-    if (upperType.includes('ADULTO')) return 'ADT';
-    if (upperType.includes('NIÑO')) return 'CHD';
-    if (upperType.includes('INFANTE')) return 'INFT';
+    if (upperType.includes('ADULT')) return 'ADT';
+    if (upperType.includes('CHILD')) return 'CHD';
+    if (upperType.includes('INFANT')) return 'INFT';
     return 'ADT'; // Default to Adult
 };
 
@@ -99,7 +99,6 @@ export class BookingService {
                 if (getKiuPassengerCode(p.passenger_type_code) !== 'INFT') delete passenger.representative;
                 return passenger;
             });
-            console.log('Pasajeros transformados para KIU:', JSON.stringify(kiuPassengers, null, 2));
 
             const kiuPayload = {
                 email: payload.email,
