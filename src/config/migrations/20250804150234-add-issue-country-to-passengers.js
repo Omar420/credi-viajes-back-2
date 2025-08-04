@@ -5,13 +5,12 @@ module.exports = {
   async up (queryInterface, Sequelize) {
     await queryInterface.addColumn('Passengers', 'fk_issue_country_id', {
       type: Sequelize.UUID,
-      allowNull: true, // Recommended to add as nullable first, then populate/update
+      allowNull: true,
       references: {
         model: 'Countries',
         key: 'id',
       },
       onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
     });
   },
 

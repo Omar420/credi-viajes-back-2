@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.createTable('payments', {
+    await queryInterface.createTable('Payments', {
       id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
@@ -12,11 +12,10 @@ module.exports = {
       installment_id: {
         type: Sequelize.UUID,
         references: {
-          model: 'installments',
+          model: 'Installments',
           key: 'id',
         },
         onUpdate: 'CASCADE',
-        onDelete: 'SET NULL',
       },
       amount_paid: {
         type: Sequelize.DECIMAL(10, 2),
@@ -47,6 +46,6 @@ module.exports = {
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable('payments');
+    await queryInterface.dropTable('Payments');
   }
 };

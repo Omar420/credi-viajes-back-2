@@ -17,7 +17,6 @@ module.exports = {
           key: 'id',
         },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
       },
       order: {
         type: Sequelize.INTEGER,

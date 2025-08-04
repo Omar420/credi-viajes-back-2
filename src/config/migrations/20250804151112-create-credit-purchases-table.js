@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.createTable('credit_purchases', {
+    await queryInterface.createTable('CreditPurchases', {
       id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
@@ -16,19 +16,14 @@ module.exports = {
           key: 'id',
         },
         onUpdate: 'CASCADE',
-        onDelete: 'SET NULL',
       },
       installment_plan_id: {
         type: Sequelize.UUID,
-        // Note: This references a table that might be created in a future migration.
-        // It's better to add this as a separate 'add-associations' migration
-        // after all tables are created. For now, we'll add it but be aware.
         references: {
-          model: 'installment_plans',
+          model: 'InstallmentPlans',
           key: 'id',
         },
         onUpdate: 'CASCADE',
-        onDelete: 'SET NULL',
       },
       total_with_interest: {
         type: Sequelize.DECIMAL(10, 2),
@@ -56,6 +51,6 @@ module.exports = {
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable('credit_purchases');
+    await queryInterface.dropTable('CreditPurchases');
   }
 };

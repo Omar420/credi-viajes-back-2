@@ -23,7 +23,6 @@ module.exports = {
           key: 'id',
         },
         onUpdate: 'CASCADE',
-        onDelete: 'SET NULL',
       }, { transaction });
 
       await queryInterface.addColumn('Bookings', 'fk_auth_id', {
@@ -34,7 +33,6 @@ module.exports = {
           key: 'id',
         },
         onUpdate: 'CASCADE',
-        onDelete: 'SET NULL',
       }, { transaction });
 
       await transaction.commit();
