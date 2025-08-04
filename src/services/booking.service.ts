@@ -101,7 +101,7 @@ export class BookingService {
             const passengerMap = new Map();
             const createdPassengers = await Promise.all(payload.passengers.map(async (p) => {
                 const docTypeId = docTypeIdMap.get(p.document_type);
-                if (!docTypeId) throw new CustomError(`Tipo de documento inválido: ${p.document_type}`);
+                if (!docTypeId) throw new CustomError(`Tipo de documento inválido: ${p.document_type}`, 400);
                 const newPassenger = await PassengersModel.create({
                     firstSurname: p.surname, firstName: p.name, fk_gender_id: p.fk_gender_id,
                     dateOfBirth: p.date_of_birth, fk_nationality_country_id: p.fk_nationality_country_id,
