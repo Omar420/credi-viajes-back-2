@@ -1,4 +1,4 @@
-@HOST=http://localhost:4000/api
+@HOST=http://localhost:4050/api
 
 @TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoSWQiOiI1MzczZThhMC00ZmU0LTQ4OGMtOWFkZi1jMjE3ODRhNTFhMTIiLCJ1aWQiOm51bGwsImlhdCI6MTc0NTk0MTQ2OCwiZXhwIjoxNzQ1OTYzMDY4fQ.83zUbQLS7Druy91sy1UN1_wRRpHHf4L2u4jqBjEiOz4
 
@@ -14,8 +14,77 @@ GET {{HOST}}/utils/genders
 x-api-key: {{API_KEY}}
 Content-Type: application/json
 
+# Response: 200 OK
+# {
+#   "status": "success",
+#   "message": "Géneros obtenidos correctamente",
+#   "data": {
+#     "count": 3,
+#     "rows": [
+#       {
+#         "id": "fc6bfcb3-41da-4a06-9d8d-e5b00e1aabf2",
+#         "name": "Femenino",
+#         "code": "F"
+#       },
+#       {
+#         "id": "a0721528-921a-4143-8547-0305BCAbac51",
+#         "name": "Masculino",
+#         "code": "M"
+#       },
+#       {
+#         "id": "e9f8c7b6-a5d4-c3b2-a198-76543210fedc",
+#         "name": "Otro",
+#         "code": "O"
+#       }
+#     ]
+#   }
+# }
 
-### 🔐 Consulta de generos
+
+### 🔐 Consulta de paises
 GET {{HOST}}/utils/countries?includeStates=true&search=VEN
 x-api-key: {{API_KEY}}
 Content-Type: application/json
+
+# Response: 200 OK
+# {
+#   "status": "success",
+#   "message": "Paises obtenidos correctamente",
+#   "data": {
+#     "count": 1,
+#     "rows": [
+#       {
+#         "id": "57330fd9-fd79-4d4f-ac19-279d406bc864",
+#         "name": "Venezuela",
+#         "code": "VE",
+#         "states": [
+#           {
+#             "id": "5b349b92-8e60-489b-b12a-0ebc3fd8291a",
+#             "name": "Distrito Capital"
+#           }
+#         ]
+#       }
+#     ]
+#   }
+# }
+
+### 🔐 Consulta de estados por pais
+GET {{HOST}}/utils/states/57330fd9-fd79-4d4f-ac19-279d406bc864
+x-api-key: {{API_KEY}}
+Content-Type: application/json
+
+# Response: 200 OK
+# {
+#   "status": "success",
+#   "message": "Estados obtenidos correctamente",
+#   "data": {
+#     "count": 1,
+#     "rows": [
+#       {
+#         "id": "5b349b92-8e60-489b-b12a-0ebc3fd8291a",
+#         "name": "Distrito Capital",
+#         "fk_country_id": "57330fd9-fd79-4d4f-ac19-279d406bc864"
+#       }
+#     ]
+#   }
+# }

@@ -27,6 +27,7 @@ export interface ClientCreateEditAttributes {
 
     genderId: string;
     authId: string;
+    clientId?: string;
 
     addresses: AddressCreateEditAttributes[];
 }

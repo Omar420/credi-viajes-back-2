@@ -21,6 +21,8 @@ export interface IAuthAttributes extends IBaseEntity {
     type: AuthType;
     // FK
     userId: string;
+    fk_user_id: string;
+    fk_client_id: string;
 }
 
 export interface AuthCreateEditAttributes {

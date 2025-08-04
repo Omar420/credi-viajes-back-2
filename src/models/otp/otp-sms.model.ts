@@ -11,6 +11,11 @@ const OTPSmsVerifications = sequelize.define(
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true
         },
+         authId: { // Sequelize mapeará esto a fk_auth_id si se usa underscored: true globalmente o field: 'fk_auth_id'
+            type: DataTypes.UUID,
+            allowNull: false,
+            field: "fk_auth_id", // Manteniendo la definición explícita del campo por consistencia
+        },
         code: {
             allowNull: false,
             unique: true,
@@ -40,12 +45,12 @@ const OTPSmsVerifications = sequelize.define(
 );
 
 AuthModel.hasOne(OTPSmsVerifications, {
-    foreignKey: 'fk_auth_id',
+    foreignKey: 'authId',
     sourceKey: 'id',
 });
 
 OTPSmsVerifications.belongsTo(AuthModel, {
-    foreignKey: 'fk_auth_id',
+    foreignKey: 'authId',
     targetKey: 'id',
 });
 

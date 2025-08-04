@@ -1,0 +1,28 @@
+import { Response } from "express";
+import { validationResult } from "express-validator";
+import { PasswordService } from "@src/services";
+import { AuthenticatedRequest } from "@src/types";
+
+const passwordService = new PasswordService();
+
+export async function changePasswordHandler(req: AuthenticatedRequest, res: Response) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({
+        status: "error",
+        errors: errors.array(),
+      });
+
+    const { authId } = req;
+    if (!authId) return res.status(401).json({ message: "No autorizado" });
+    const { oldPassword, newPassword } = req.body;
+    await passwordService.changePassword(authId, oldPassword, newPassword);
+    res.json({ message: "Contraseña actualizada" });
+  } catch (err: any) {
+    return res.status(500).json({
+      status: "error",
+      message: err.message,
+    });
+  }
+}

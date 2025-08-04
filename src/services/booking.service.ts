@@ -1,26 +1,28 @@
 import { FindOptions, Transaction } from "sequelize";
 import sequelize from "@src/config/connection";
 import {
-    // Corrected Model Imports
     BookingModel, 
     ClientModel,  
     UserModel,    
-    PassengersModel, // Corrected: Should be PassengersModel as per export
-    BookingsPassengersModel, // Corrected: Should be BookingsPassengersModel as per export
+    PassengersModel,
+    BookingsPassengersModel,
     DestinationsModel, 
     BookingStatusModel, 
-    CountriesModel, // Default export from countries.model.ts via models/shared/index.ts then models/index.ts
-    DocumentTypesModel, // Default export from document-type.model.ts via models/documents/index.ts then models/index.ts
-    GenderModel // Default export from genders.model.ts via models/shared/index.ts then models/index.ts
-} from "@src/models"; // This central import relies on correct re-exports from src/models/index.ts and sub-indices
-import { IBookingCreationPayload, IBookingAttributes, IBookingUpdatePayload, IBookingServiceCreatePayload } from "@src/types/booking.type";
-import { IPassengerDataInput } from "@src/types/passenger.type"; // Corrected to IPassengerDataInput
+    CountriesModel,
+    DocumentTypesModel,
+    GenderModel
+} from "@src/models";
+import { ISmartBookingRequest, IBookingAttributes, IBookingUpdatePayload, IBookingServiceCreatePayload, IKiuBookingResponse } from "@src/types/booking.type";
+import { IPassengerDataInput } from "@src/types/passenger.type";
 import { generateUniqueBookingReference } from "@src/utils/generate-booking-reference"; 
 import { CustomError } from "@src/utils/custom-exception.error";
+import { KiuService } from "./kiu.service";
+
+const kiuService = new KiuService();
 
 export class BookingService {
 
-    private validatePassengerLogic(passengers: IPassengerDataInput[]): string | null { // Corrected type
+    private validatePassengerLogic(passengers: IPassengerDataInput[]): string | null {
         if (passengers.length === 0 || passengers.length > 9) {
             return "Se requiere entre 1 y 9 pasajeros por reserva.";
         }
@@ -37,6 +39,52 @@ export class BookingService {
         return null;
     }
 
+    public async createSmartBooking(payload: ISmartBookingRequest, userId: string): Promise<IKiuBookingResponse> {
+        let transaction: Transaction | undefined;
+        try {
+            transaction = await sequelize.transaction();
+
+            const kiuPayload = {
+                ...payload,
+                passengers: payload.passengers.map(p => {
+                    if (p.passenger_type_code !== 'INFT') {
+                        delete p.representative;
+                    }
+                    return p;
+                }),
+                air_itinerary_information: payload.air_itinerary_information.map(item => ({
+                    ...item,
+                    departure_information: {
+                        ...item.departure_information,
+                        time: item.departure_information.time.replace(/:/g, '').slice(0, 4)
+                    }
+                }))
+            };
+
+            console.log("KIU Payload:", JSON.stringify(kiuPayload, null, 2));
+
+            const kiuResponse: IKiuBookingResponse = await kiuService.createSmartBooking(kiuPayload);
+
+            console.log("KIU Response:", JSON.stringify(kiuResponse, null, 2));
+
+            const bookingData = {
+                bookingReference: kiuResponse.booking.booking.recordLocator,
+                kiu_response: kiuResponse,
+                // ... Mapea el resto de los datos necesarios
+            };
+
+            // const newBooking = await BookingModel.create(bookingData, { transaction });
+
+            await transaction.commit();
+
+            return kiuResponse;
+
+        } catch (error: unknown) {
+            if (transaction) await transaction.rollback();
+            throw error;
+        }
+    }
+
     public async createBooking(
     payload: IBookingServiceCreatePayload, 
     userId: string
@@ -45,10 +93,8 @@ export class BookingService {
     try {
         transaction = await sequelize.transaction();
 
-        // Generate reference if not provided
         const bookingReference = payload.bookingReference || await generateUniqueBookingReference();
         
-        // Create the booking
         const createdBooking = await BookingModel.create({
             name: payload.name,
             description: payload.description,
@@ -67,7 +113,6 @@ export class BookingService {
             fk_updated_by_id: payload.fk_updated_by_id,
         }, { transaction });
 
-        // Create passengers
         const bookingPassengersEntries = await Promise.all(
             payload.passengers.map(async (passengerData) => {
                 const newPassenger = await PassengersModel.create({
@@ -122,7 +167,7 @@ export class BookingService {
                 includes.push({
                     model: PassengersModel, 
                     as: 'passengers',
-                    through: { attributes: [] }, // No join table attributes needed here
+                    through: { attributes: [] },
                     include: [
                         { model: GenderModel, as: 'gender' },
                         { model: CountriesModel, as: 'nationality' },
@@ -155,7 +200,6 @@ export class BookingService {
             }
 
             const { rows, count } = await BookingModel.findAndCountAll(finalOptions);
-            return { rows: rows.map(r => r.get({ plain: true }) as IBookingAttributes), count };
             return { rows: rows.map(r => r.get({ plain: true }) as IBookingAttributes), count };
         } catch (error: any) {
             console.error("Error fetching bookings by client ID in service:", error);
@@ -192,19 +236,14 @@ export class BookingService {
         try {
             transaction = await sequelize.transaction();
             const bookingInstance = await BookingModel.findByPk(id, { transaction });
-            if (!bookingInstance || bookingInstance.get('deleted')) { // Use .get('attributeName') for safety or ensure model typing allows direct access
+            if (!bookingInstance || bookingInstance.get('deleted')) {
                 throw new CustomError( "Reserva no encontrada o ha sido eliminada.", 404);
             }
-
-            // Add authorization logic here: e.g., only admin or owner can update
-            // const client = await ClientModel.findOne({where: {fk_user_id: userId}});
-            // if (!user.roles.includes('admin') && bookingInstance.get('fk_client_id') !== client?.id) { ... }
 
             const updateData: Partial<IBookingAttributes> & { fk_updated_by_id: string } = {
                 name: payload.name,
                 description: payload.description,
                 totalAmount: payload.totalAmount,
-                // passengerCount should be updated if passengers are modified via controller/other services
                 paymentSuccessful: payload.paymentSuccessful,
                 notes: payload.notes,
                 departureDate: payload.departureDate ? new Date(payload.departureDate) : undefined,
@@ -214,7 +253,6 @@ export class BookingService {
                 fk_destination_id: payload.fk_destination_id,
                 fk_updated_by_id: userId,
             };
-             // Remove undefined fields so they don't overwrite existing values with null
             Object.keys(updateData).forEach(key => updateData[key as keyof typeof updateData] === undefined && delete updateData[key as keyof typeof updateData]);
 
 
@@ -225,16 +263,12 @@ export class BookingService {
                 }
             }
             
-            // Handle passenger updates if payload includes passenger data
-            // This can be complex: adding, removing, updating passengers.
-            // May need separate methods or direct use of BookingPassengersService.
-
             await bookingInstance.update(updateData, { transaction });
             await transaction.commit();
             
-            const result = await this.getBookingById(id); // This returns IBookingAttributes | null
+            const result = await this.getBookingById(id);
             if (!result) throw new CustomError("Error fetching updated booking details.", 500); 
-            return result; // result is IBookingAttributes
+            return result;
 
         } catch (error: any) {
             if (transaction) await transaction.rollback();
@@ -244,7 +278,6 @@ export class BookingService {
         }
     }
     
-    // Specific method for status update, often used by admins or payment webhooks
     public async updateBookingStatus(id: string, statusId: string, paymentSuccessful: boolean | undefined, userId: string): Promise<IBookingAttributes | null> {
         let transaction: Transaction | undefined;
         try {
@@ -255,16 +288,16 @@ export class BookingService {
             }
 
             const statusExists = await BookingStatusModel.findByPk(statusId, { transaction });
-            if (!statusExists) { // statusExists is an instance or null
+            if (!statusExists) {
                 throw new CustomError("El estado proporcionado no es válido.", 400);
             }
             
-            const updatePayload: Partial<IBookingAttributes> = { // IBookingAttributes includes these fields
+            const updatePayload: Partial<IBookingAttributes> = {
                 fk_status_id: statusId,
                 fk_updated_by_id: userId,
             };
             if (paymentSuccessful !== undefined) {
-                updatePayload.paymentSuccessful = paymentSuccessful; // This is part of IBookingAttributes
+                updatePayload.paymentSuccessful = paymentSuccessful;
             }
 
             await bookingInstance.update(updatePayload, { transaction });
@@ -289,9 +322,6 @@ export class BookingService {
                 throw new CustomError("Reserva no encontrada.", 404);
             }
 
-            // Authorization: e.g., admin or booking owner/client
-            // ...
-            // Accessing populated 'status' association. Ensure 'status' type on IBookingAttributes is correct.
             const currentStatus = bookingInstance.get('status') as InstanceType<typeof BookingStatusModel> | undefined;
 
             if (currentStatus?.get('code') === 'CANCELLED' || currentStatus?.get('code') === 'COMPLETED') {
@@ -304,12 +334,10 @@ export class BookingService {
             }
 
             await bookingInstance.update({
-                fk_status_id: cancelledStatusInstance.get('id') as string, // Direct access to id attribute
-                paymentSuccessful: false, // Or based on business logic for cancellations
+                fk_status_id: cancelledStatusInstance.get('id') as string,
+                paymentSuccessful: false,
                 fk_updated_by_id: userId,
             }, { transaction });
-
-            // Additional logic: e.g., trigger refund process, notify user
 
             await transaction.commit();
             return true;
@@ -322,14 +350,11 @@ export class BookingService {
     }
     
     public async deleteBooking(id: string, userId: string): Promise<boolean> {
-        // Typically soft delete
         try {
             const bookingInstance = await BookingModel.findByPk(id);
             if (!bookingInstance || bookingInstance.get('deleted')) {
                  throw new CustomError("Reserva no encontrada.", 404);
             }
-            // Authorization
-            // ...
 
             await bookingInstance.update({ deleted: true, fk_updated_by_id: userId });
             return true;

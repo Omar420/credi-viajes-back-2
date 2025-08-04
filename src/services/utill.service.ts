@@ -25,6 +25,7 @@ export class UtilService {
         return await CountriesModel.findAndCountAll({
             where: whereClause,
             order: [["name", "ASC"]],
+            attributes: ["id", "name", "code", "countryPrefix"],
             include: includeStates !== false
                 ? [
                     {
@@ -40,6 +41,13 @@ export class UtilService {
                     },
                 ]
                 : [],
+        });
+    }
+
+    async findAndCountAllStates(countryId: string) {
+        return await StatesModel.findAndCountAll({
+            where: { fk_country_id: countryId },
+            order: [["name", "ASC"]],
         });
     }
 

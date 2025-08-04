@@ -1,10 +1,62 @@
-import { IPassengerDataInput,  IPassengerSummary } from "./passenger.type";
+import { IPassengerDataInput,  IPassengerSummary, ISmartBookingPassenger } from "./passenger.type";
 import { 
     IBookingStatusSummary, 
     IClientSummary, 
     IDestinationSummary, 
     IUserSummary 
 } from "./shared.type";
+
+export interface IKiuBookingResponse {
+    message: string;
+    status: number;
+    booking: IKiuBooking;
+    ok: boolean;
+}
+
+export interface IKiuBooking {
+    passengers: any[];
+    flights: any[];
+    pricing: any;
+    contacts: any[];
+    booking: {
+        recordLocator: string;
+        confirmed: boolean;
+        cancelled: boolean;
+        pendingItems: any;
+    };
+    bookingOffice: any;
+    pointOfSale: any;
+}
+
+export interface ISmartBookingRequest {
+    email: string;
+    phone: string;
+    countryCode: string;
+    carrier: string;
+    passengers: ISmartBookingPassenger[];
+    air_itinerary_information: IAirItineraryInformation[];
+}
+
+export interface IAirItineraryInformation {
+    order: number;
+    departure_information: IDepartureInformation;
+    arrival_information: IArrivalInformation;
+    flight_number: number;
+    reservation_booking_designator_code: string;
+    number_in_party: number;
+    carrier: string;
+}
+
+export interface IDepartureInformation {
+    location_code: string;
+    date: string;
+    time: string;
+}
+
+export interface IArrivalInformation {
+    location_code: string;
+}
+
 
 // In your @src/types/booking.type.ts file
 export interface IBookingCreationPayload {
@@ -119,7 +171,7 @@ export interface IBookingAttributes {
     client?: IClientSummary;       // Or full IClientAttributes
     createdBy?: IUserSummary;      // Or full IUserAttributes
     updatedBy?: IUserSummary;      // Or full IUserAttributes
-    // passengers?: IPassengerDetails[]; // Array of IPassengerDetails
+    // passengers?: IPassengerDetails[]; // Array de IPassengerDetails
 }
 
 // For BookingService.createBooking method - data strictly for the Booking table

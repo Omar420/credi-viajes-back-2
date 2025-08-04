@@ -1,28 +1,31 @@
-@HOST = http://e4cc84ssk88o0gk0ggk8ok4o.192.95.40.150.sslip.io/api
-@API_KEY = GcE9Rfrw9D37fzN6LkOT6y
-@INT = 87996b9c-b5c8-4943-a204-1a9821eb0914
+@HOST = http://localhost:4050/api
+@API_KEY = cfrw9D3kOE9RT6yG
+@TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJjNDQ4NGZlMS1mYTVlLTQzMTUtOWUwYi02MGEyOWU0ODFlYzciLCJpYXQiOjE3NTM0NTc2NTgsImV4cCI6MTc1MzQ3NTY1OH0.9HHggp2W3_Xat8cfs-Lz-_hAliYcfLUw_4e6JTfi8tM
 
 
-POST {{HOST}}/kiu/availability-flights?integrationID={{INT}}
+
+POST {{HOST}}/kiu/availability-flights
 Content-Type: application/json
 x-api-key: {{API_KEY}}
+Authorization: Bearer {{TOKEN}}
 
 {
-  "adults": 1,
-  "children": 0,
-  "infants": 0,
-  "origin": "CCS",
-  "destination": "VIG",
-  "departure_date": "2025-07-20",
-  "return_date": "2025-07-25"
+  "adults":1,
+  "children":0,
+  "infants":0,
+  "origin":"CCS",
+  "destination":"VIG",
+  "departure_date": "2025-07-29",
+  "return_date": "2025-08-01"
 }
 
 
 ###
 
-POST {{HOST}}/kiu/smart-search?integrationID={{INT}}
+POST {{HOST}}/kiu/availability-flights
 Content-Type: application/json
 x-api-key: {{API_KEY}}
+Authorization: Bearer {{TOKEN}}
 
 {
   "adults": 1,
@@ -30,8 +33,8 @@ x-api-key: {{API_KEY}}
   "infants": 0,
   "origin": "CCS",
   "destination": "VIG",
-  "departure_date": "2025-07-20",
-  "return_date": "2025-07-25",
+  "departure_date": "2025-07-29",
+  "return_date": "2025-08-01",
   "flight_numbers": ["1924", "1925"],
   "carrier": "QL"
 } 

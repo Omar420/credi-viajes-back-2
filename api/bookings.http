@@ -1,177 +1,150 @@
-@HOST=http://localhost:4050/api
-
-@TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJjNDQ4NGZlMS1mYTVlLTQzMTUtOWUwYi02MGEyOWU0ODFlYzciLCJpYXQiOjE3NTE5MDU2MTYsImV4cCI6MTc1MTkyMzYxNn0.zLncsW8wgLK7-vS-mBcn0IE9eW73KOg0fsF8ue3_kUI
-
+@HOST = https://qa.back.creditviajes.com/api
 @API_KEY = cfrw9D3kOE9RT6yG
+@TOKEN = YOUR_LOGIN_TOKEN
 
-@userId=ID_DEL_USUARIO_AUTENTICADO
-
-@targetId=ID_DEL_USUARIO_A_MODIFICAR
-
-# Masculino
-@gender_id=fc6bfcb3-41da-4a06-9d8d-e5b00e1aabf2
-
-@country_id=57330fd9-fd79-4d4f-ac19-279d406bc864
-
-@state_id=5b349b92-8e60-489b-b12a-0ebc3fd8291a
-
-# Administrador
-@roleId=51b81465-e6a2-4167-a053-4a8b35f2834a
-@booking_api_path = /bookings
-# @token = {{auth.response.body.data.token}} # Para usuario normal/cliente
-@admin_token = {{TOKEN}}
-#  {{auth_admin.response.body.data.token}} # Para usuario admin - Asume una request 'auth_admin' en auth.http
-@user_token = {{TOKEN}}
-#  {{auth_user.response.body.data.token}} # Para un usuario cliente - Asume una request 'auth_user' en auth.http
-
-# Necesitarás IDs válidos de tu base de datos para:
-@origin_id = "poner_fk_origin_id_valido_aqui" # ej: ID de un DestinationModel
-@destination_id = "poner_fk_destination_id_valido_aqui" # ej: ID de un DestinationModel
-@gender_id = "poner_fk_gender_id_valido_aqui" # ej: ID de un GenderModel
-@nationality_id = "poner_fk_nationality_country_id_valido_aqui" # ej: ID de un CountriesModel
-@doc_type_id = "poner_fk_doc_type_id_valido_aqui" # ej: ID de un DocumentTypesModel
-@status_pending_id = "poner_id_status_pending_aqui" # ej: ID de BookingStatusModel para 'PENDING'
-@status_confirmed_id = "poner_id_status_confirmed_aqui" # ej: ID de BookingStatusModel para 'CONFIRMED'
-@status_cancelled_id = "poner_id_status_cancelled_aqui" # ej: ID de BookingStatusModel para 'CANCELLED'
-
-
-### ------------------------- BOOKINGS (Cliente/Usuario) ------------------------- ###
-
-### Create a new booking
-# @name createBooking
-POST {{HOST}}{{booking_api_path}}
-Content-Type: application/json
-Authorization: Bearer {{TOKEN}}
-
-{
-    "departureDate": "2024-12-15T10:00:00.000Z",
-    "returnDate": "2024-12-20T18:00:00.000Z",
-    "fk_origin_id": "{{origin_id}}",
-    "fk_destination_id": "{{destination_id}}",
-    "totalAmount": 250.75, // Opcional, o se calcula en backend
-    "name": "Viaje de Navidad a la Playa",
-    "notes": "Llevar bloqueador solar y sombrero.",
-    "passengers": [
-        {
-            "firstName": "Juan",
-            "firstSurname": "Perez",
-            "middleName": "Carlos",
-            "fk_gender_id": "{{gender_id}}",
-            "dateOfBirth": "1985-05-10",
-            "fk_nationality_country_id": "{{nationality_id}}",
-            "fk_doc_type_id": "{{doc_type_id}}",
-            "documentNumber": "AB1234567",
-            "passengerType": "adult"
-        },
-        {
-            "firstName": "Ana",
-            "firstSurname": "Gomez",
-            "fk_gender_id": "{{gender_id}}",
-            "dateOfBirth": "2015-10-20",
-            "fk_nationality_country_id": "{{nationality_id}}",
-            "fk_doc_type_id": "{{doc_type_id}}",
-            "documentNumber": "CD8901234",
-            "passengerType": "child"
-        }
-    ]
-}
-
-### Get user's bookings
-# @name getUserBookings
-GET {{HOST}}{{booking_api_path}}
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJjNDQ4NGZlMS1mYTVlLTQzMTUtOWUwYi02MGEyOWU0ODFlYzciLCJpYXQiOjE3NTE5MTczODcsImV4cCI6MTc1MTkzNTM4N30.TLHlWAb-qPs11UDxiKXB7lJbRnElSe53vAp5RbZQBCE
-
-### Get a specific booking by ID (Usuario/Cliente)
-# @name getBookingByIdUser
-# Suponiendo que {{createBooking.response.body.data.id}} tiene el ID de la reserva creada
-GET {{HOST}}{{booking_api_path}}/{{createBooking.response.body.data.id}}
-Authorization: Bearer {{TOKEN}}
-
-### Cancel a booking (Usuario/Cliente)
-# @name cancelBookingUser
-PUT {{HOST}}{{booking_api_path}}/{{createBooking.response.body.data.id}}/cancel
-Authorization: Bearer {{TOKEN}}
-
-
-### ------------------------- BOOKINGS (Admin) ------------------------- ###
-
-### Get all bookings (Admin)
-# @name getAllBookingsAdmin
-GET {{HOST}}{{booking_api_path}}/all
-Authorization: Bearer {{TOKEN}}
-
-
-### Get a specific booking by ID (Admin)
-# @name getBookingByIdAdmin
-# Suponiendo que {{createBooking.response.body.data.id}} tiene el ID de una reserva existente
-GET {{HOST}}{{booking_api_path}}/{{createBooking.response.body.data.id}}
-Authorization: Bearer {{TOKEN}}
-
-### Update booking status (Admin)
-# @name updateBookingStatusAdmin
-PATCH {{HOST}}{{booking_api_path}}/{{createBooking.response.body.data.id}}/status
-Content-Type: application/json
-Authorization: Bearer {{TOKEN}}
-
-{
-    "fk_status_id": "{{status_confirmed_id}}",
-    "paymentSuccessful": true
-}
-
-### Cancel a booking (Admin)
-# @name cancelBookingAdmin
-PUT {{HOST}}{{booking_api_path}}/{{createBooking.response.body.data.id}}/cancel
-Authorization: Bearer {{TOKEN}}
-
-
-### ------------------------- Casos de Prueba Adicionales ------------------------- ###
-
-### Create booking with an infant (requiere lógica de associatedAdultId)
-# POST {{HOST}}{{booking_api_path}}
-# Content-Type: application/json
-# Authorization: Bearer {{user_token}}
-# {
-#     "departureDate": "2025-01-10T10:00:00.000Z",
-#     "fk_origin_id": "{{origin_id}}",
-#     "fk_destination_id": "{{destination_id}}",
-#     "passengers": [
-#         {
-#             "firstName": "Maria",
-#             "firstSurname": "Lopez",
-#             "fk_gender_id": "{{gender_id}}",
-#             "dateOfBirth": "1990-03-15",
-#             "fk_nationality_country_id": "{{nationality_id}}",
-#             "fk_doc_type_id": "{{doc_type_id}}",
-#             "documentNumber": "EF2345678",
-#             "passengerType": "adult"
-#             // Si el backend asigna IDs temporales o el front los envía: "tempId": "adulto1" 
-#         },
-#         {
-#             "firstName": "Bebe",
-#             "firstSurname": "Lopez",
-#             "fk_gender_id": "{{gender_id}}",
-#             "dateOfBirth": "2023-11-01",
-#             "fk_nationality_country_id": "{{nationality_id}}",
-#             "fk_doc_type_id": "{{doc_type_id}}", // O un tipo de doc. para infantes
-#             "documentNumber": "INF901234",
-#             "passengerType": "infant",
-#             "associatedAdultId": null // El backend necesitaría lógica para asociar al adulto creado en la misma request
-#                                      // O el front envía "associatedAdultTempId": "adulto1"
-#         }
-#     ]
-# }
-
-### Create booking with validation error (e.g., too many passengers)
-# POST {{HOST}}{{booking_api_path}}
-# Content-Type: application/json
-# Authorization: Bearer {{user_token}}
-# {
-#     "departureDate": "2024-11-01T00:00:00.000Z",
-#     "fk_origin_id": "{{origin_id}}",
-#     "fk_destination_id": "{{destination_id}}",
-#     "passengers": [ /* Array con 10 pasajeros */ ]
-# }
-
-### Separador para organizar visualmente en VS Code (Rest Client)
 ###
+# --------------------------------------------------------------------------------------
+# BOOKING REQUESTS
+# --------------------------------------------------------------------------------------
+# This file contains examples for creating bookings.
+#
+# IMPORTANT:
+# - The `Authorization` header must contain a valid JWT token obtained from logging in.
+# - The `x-api-key` is a static key for the application.
+# - The `representative` field in the passengers array is ONLY required for infants (`INFT`).
+#   It should contain the `foid_id` of the accompanying adult.
+# - `order: 1` represents a one-way trip.
+# - `order: 2` represents the return flight for a round-trip.
+#
+# --------------------------------------------------------------------------------------
 
+### Create a One-Way Booking (Adult only)
+# @name createOneWayBooking
+POST {{HOST}}/bookings
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+x-api-key: {{API_KEY}}
+
+{
+  "email": "test.adult@example.com",
+  "phone": "+11234567890",
+  "countryCode": "US",
+  "carrier": "QL",
+  "passengers": [
+    {
+      "surname": "WAYNE",
+      "name": "BRUCE",
+      "gender": "M",
+      "foid_type": "ID",
+      "document_type": "I",
+      "foid_id": "987654321",
+      "date_of_birth": "30MAR85",
+      "passenger_type_code": "ADT",
+      "nationality": "US",
+      "issue_country": "US",
+      "expiration_date": "30MAR30"
+    }
+  ],
+  "air_itinerary_information": [
+    {
+      "order": 1,
+      "departure_information": {
+        "location_code": "JFK",
+        "date": "2025-09-10",
+        "time": "0800"
+      },
+      "arrival_information": {
+        "location_code": "LAX"
+      },
+      "flight_number": 2025,
+      "reservation_booking_designator_code": "N",
+      "number_in_party": 1,
+      "carrier": "QL"
+    }
+  ]
+}
+
+### --------------------------------------------------------------------------------------
+
+### Create a Round-Trip Booking (Adult and Infant)
+# @name createRoundTripBookingWithInfant
+POST {{HOST}}/bookings
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+x-api-key: {{API_KEY}}
+
+{
+  "email": "test.infant@example.com",
+  "phone": "+442071234567",
+  "countryCode": "GB",
+  "carrier": "QL",
+  "passengers": [
+    {
+      "surname": "KENT",
+      "name": "CLARK",
+      "gender": "M",
+      "foid_type": "PP",
+      "document_type": "P",
+      "foid_id": "A1B2C3D4E5",
+      "date_of_birth": "29FEB80",
+      "passenger_type_code": "ADT",
+      "nationality": "GB",
+      "issue_country": "GB",
+      "expiration_date": "29FEB28"
+    },
+    {
+      "surname": "KENT",
+      "name": "JONATHAN",
+      "gender": "M",
+      "foid_type": "ID",
+      "document_type": "I",
+      "foid_id": "F6G7H8I9J0",
+      "date_of_birth": "15JUN23",
+      "passenger_type_code": "INFT",
+      "nationality": "GB",
+      "issue_country": "GB",
+      "expiration_date": "15JUN33",
+      "representative": "A1B2C3D4E5"
+    }
+  ],
+  "air_itinerary_information": [
+    {
+      "order": 1,
+      "departure_information": {
+        "location_code": "LHR",
+        "date": "2025-10-20",
+        "time": "1130"
+      },
+      "arrival_information": {
+        "location_code": "CDG"
+      },
+      "flight_number": 1810,
+      "reservation_booking_designator_code": "Y",
+      "number_in_party": 2,
+      "carrier": "QL"
+    },
+    {
+      "order": 2,
+      "departure_information": {
+        "location_code": "CDG",
+        "date": "2025-10-27",
+        "time": "1500"
+      },
+      "arrival_information": {
+        "location_code": "LHR"
+      },
+      "flight_number": 1811,
+      "reservation_booking_designator_code": "Y",
+      "number_in_party": 2,
+      "carrier": "QL"
+    }
+  ]
+}
+
+
+
+
+###
+I/flutter (19141): 📤 Enviando POST a: https://qa.back.creditviajes.com/api/booking
+I/flutter (19141): 📦 Body: {"email":"ogalindez420@gmail.com","phone":"4125551654","countryCode":"VE","carrier":"QL","passengers":[{"surname":"galindez","name":"Omar","gender":"M","foid_type":"ID","document_type":"I","foid_id":"26386392","date_of_birth":"25JUL02","passenger_type_code":"INFT","nationality":"VE","issue_country":"VE","expiration_date":"27DEC25"}],"air_itinerary_information":[]}
+I/flutter (19141): 🧾 Headers: {Content-Type: application/json, x-api-key: cfrw9D3kOE9RT6yG, Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJlMTU0YzdiMy02ZjM1LTQxYmEtODcxMy1lMmEyOGFiMTcwNmMiLCJpYXQiOjE3NTM0NzMxNjksImV4cCI6MTc1MzQ5MTE2OX0.NqPvJ8Wh6DhyZTyyXkZ2OXzjJ46aOFgLDjngsaVpJnU}

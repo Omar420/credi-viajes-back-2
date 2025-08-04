@@ -9,12 +9,6 @@ module.exports = {
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
       },
-      authId: {
-        type: Sequelize.UUID,
-        allowNull: false,
-        references: { model: "Auth", key: "id" },
-        onDelete: "CASCADE",
-      },
       code: {
         type: Sequelize.STRING(6),
         allowNull: false,

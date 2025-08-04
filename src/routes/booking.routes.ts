@@ -6,7 +6,8 @@ import {
     getUserBookings, 
     getAllBookings, 
     updateBookingStatus,
-    cancelBooking
+    cancelBooking,
+    createSmartBooking
 } from "@src/controllers/booking.controller";
 import { validateFieldsMiddleware, validateJWTMiddleware } from "@src/middlewares";
 import { ERROR_MESSAGES } from "@src/constants/messages.global";
@@ -15,14 +16,13 @@ import { ROLES } from "@src/constants/config-global";
 
 const router = Router();
 
-// Apply JWT validation to all booking routes
 router.use(validateJWTMiddleware);
 
-// Create a new booking
+router.post("/smart-booking", createSmartBooking);
+
 router.post(
     "/",
     [
-        // Booking validations
         check("departureDate", "La fecha de salida es obligatoria y debe ser una fecha válida").isISO8601().toDate(),
         check("returnDate", "La fecha de regreso debe ser una fecha válida").optional({ nullable: true }).isISO8601().toDate(),
         check("fk_origin_id", "El ID del origen es obligatorio y debe ser un UUID").isUUID(),
@@ -32,7 +32,6 @@ router.post(
         check("name", "El nombre de la reserva debe ser un texto").optional().isString().trim(),
         check("description", "La descripción de la reserva debe ser un texto").optional().isString().trim(),
 
-        // Passengers validations
         check("passengers", "Se requiere un array de pasajeros (1-9)").isArray({ min: 1, max: 9 }),
         check("passengers.*.firstName", "El nombre del pasajero es obligatorio").notEmpty().isString().trim(),
         check("passengers.*.firstSurname", "El apellido del pasajero es obligatorio").notEmpty().isString().trim(),
@@ -52,20 +51,16 @@ router.post(
     createBooking
 );
 
-// Get authenticated user's bookings
 router.get("/", getUserBookings);
 
-// Get all bookings (Admin only)
 router.get(
     "/all",
     [
-        // Add role check if needed
         validateFieldsMiddleware
     ],
     getAllBookings
 );
 
-// Get specific booking by ID
 router.get(
     "/:id",
     [
@@ -75,7 +70,6 @@ router.get(
     getBookingById
 );
 
-// Update booking status
 router.patch(
     "/:id/status",
     [
@@ -93,7 +87,6 @@ router.patch(
     updateBookingStatus
 );
 
-// Cancel booking
 router.put(
     "/:id/cancel",
     [

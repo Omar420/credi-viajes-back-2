@@ -1,14 +1,15 @@
 import { Request, Response } from "express";
 import { CustomError } from "@src/utils/custom-exception.error";
 import { ERROR_MESSAGES, SUCCESS_MESSAGES, INFO_MESSAGES } from "@src/constants/messages.global";
-import { IProduct } from "@src/types/product.type"; // Define este tipo acorde a tu modelo
-import { AuthenticatedRequest } from "@src/types/custom-request.type"; // Para acceder a req.userId
-import Product from "@src/models/products/products.model";
-import { CategoryModel, UserModel } from "@src/models";
+import { IProduct } from "@src/types/product.type";
+import { AuthenticatedRequest } from "@src/types/custom-request.type";
+import { ProductService } from "@src/services";
+
+const productService = new ProductService();
 
 // Crear producto
 export const createProduct = async (req: AuthenticatedRequest, res: Response) => {
-  const { name, description, amount, stock_qty, fk_category_id } = req.body as IProduct;
+  const productData = req.body as IProduct;
   const userId = req.userId;
 
   if (!userId) {
@@ -16,22 +17,7 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response) =>
   }
 
   try {
-    // Verificar existencia de categoría
-    const category = await CategoryModel.findByPk(fk_category_id);
-    if (!category) {
-      return res.status(404).json({ message: ERROR_MESSAGES.ERROR_CATEGORY_NOT_FOUND });
-    }
-
-    const newProduct = await Product.create({
-      name,
-      description,
-      amount,
-      stock_qty,
-      fk_category_id,
-      fk_created_by_id: userId,
-      fk_updated_by_id: userId,
-    });
-
+    const newProduct = await productService.createProduct(productData, userId);
     return res.status(201).json({
       message: SUCCESS_MESSAGES.SUCCESS_PRODUCT_CREATED,
       data: newProduct,
@@ -39,7 +25,7 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response) =>
   } catch (error: any) {
     console.error("Error creating product:", error);
     if (error instanceof CustomError) {
-      return res.status(error.statusCode).json({ message: error.message, errors: error });
+      return res.status(error.statusCode).json({ message: error.message, errors: error.getErrors() });
     }
     return res.status(500).json({ message: ERROR_MESSAGES.ERROR_PRODUCT_CREATION_FAILED, error: error.message });
   }
@@ -48,14 +34,7 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response) =>
 // Obtener todos los productos activos
 export const getProducts = async (req: Request, res: Response) => {
   try {
-    const products = await Product.findAll({
-      where: { deleted: false },
-      include: [
-        { model: CategoryModel, as: "category", attributes: ["id", "name"] },
-        { model: UserModel, as: "createdBy", attributes: ["id", "name", "surname"] },
-        { model: UserModel, as: "updatedBy", attributes: ["id", "name", "surname"] },
-      ],
-    });
+    const products = await productService.getProducts();
 
     if (!products.length) {
       return res.status(200).json({ message: INFO_MESSAGES.NO_RECORDS_FOUND, data: [] });
@@ -80,14 +59,7 @@ export const getProductById = async (req: Request, res: Response) => {
   }
 
   try {
-    const product = await Product.findOne({
-      where: { id, deleted: false },
-      include: [
-        { model: CategoryModel, as: "category", attributes: ["id", "name"] },
-        { model: UserModel, as: "createdBy", attributes: ["id", "username"] },
-        { model: UserModel, as: "updatedBy", attributes: ["id", "username"] },
-      ],
-    });
+    const product = await productService.getProductById(id);
 
     if (!product) {
       return res.status(404).json({ message: ERROR_MESSAGES.ERROR_PRODUCT_NOT_FOUND });
@@ -106,7 +78,7 @@ export const getProductById = async (req: Request, res: Response) => {
 // Actualizar producto
 export const updateProduct = async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
-  const { name, description, amount, stock_qty, fk_category_id } = req.body as Partial<IProduct>;
+  const productData = req.body as Partial<IProduct>;
   const userId = req.userId;
 
   if (!id) {
@@ -117,38 +89,15 @@ export const updateProduct = async (req: AuthenticatedRequest, res: Response) =>
   }
 
   try {
-    const product = await Product.findOne({ where: { id, deleted: false } });
-    if (!product) {
-      return res.status(404).json({ message: ERROR_MESSAGES.ERROR_PRODUCT_NOT_FOUND });
-    }
-
-    if (fk_category_id) {
-      const category = await CategoryModel.findByPk(fk_category_id);
-      if (!category) {
-        return res.status(404).json({ message: ERROR_MESSAGES.ERROR_CATEGORY_NOT_FOUND });
-      }
-    }
-
-    const updatedData: Partial<IProduct> & { fk_updated_by_id: string } = {
-      fk_updated_by_id: userId,
-    };
-
-    if (name !== undefined) updatedData.name = name;
-    if (description !== undefined) updatedData.description = description;
-    if (amount !== undefined) updatedData.amount = amount;
-    if (stock_qty !== undefined) updatedData.stock_qty = stock_qty;
-    if (fk_category_id !== undefined) updatedData.fk_category_id = fk_category_id;
-
-    await product.update(updatedData);
-
+    const updatedProduct = await productService.updateProduct(id, productData, userId);
     return res.status(200).json({
       message: SUCCESS_MESSAGES.SUCCESS_PRODUCT_UPDATED,
-      data: product,
+      data: updatedProduct,
     });
   } catch (error: any) {
     console.error(`Error updating product with id ${id}:`, error);
     if (error instanceof CustomError) {
-      return res.status(error.statusCode).json({ message: error.message, errors: error });
+      return res.status(error.statusCode).json({ message: error.message, errors: error.getErrors() });
     }
     return res.status(500).json({ message: ERROR_MESSAGES.ERROR_PRODUCT_UPDATE_FAILED, error: error.message });
   }
@@ -167,19 +116,15 @@ export const deleteProduct = async (req: AuthenticatedRequest, res: Response) =>
   }
 
   try {
-    const product = await Product.findOne({ where: { id, deleted: false } });
-    if (!product) {
-      return res.status(404).json({ message: ERROR_MESSAGES.ERROR_PRODUCT_NOT_FOUND });
-    }
-
-    // Soft delete
-    await product.update({ deleted: true, fk_updated_by_id: userId });
-
+    await productService.deleteProduct(id, userId);
     return res.status(200).json({
       message: SUCCESS_MESSAGES.SUCCESS_PRODUCT_DELETED,
     });
   } catch (error: any) {
     console.error(`Error deleting product with id ${id}:`, error);
+    if (error instanceof CustomError) {
+        return res.status(error.statusCode).json({ message: error.message, errors: error.getErrors() });
+    }
     return res.status(500).json({ message: ERROR_MESSAGES.ERROR_PRODUCT_DELETION_FAILED, error: error.message });
   }
 };

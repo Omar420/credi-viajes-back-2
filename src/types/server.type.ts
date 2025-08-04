@@ -8,6 +8,11 @@ export interface IPathRoutes {
   products: string;
   // productCategory: string;
   bookings: string;
+  kiu: string;
+  payments: string;
+  userProfile: string;
+  clientProfile: string;
+  password: string;
   // bookingPassengers: string;
   // bookingStatus: string;
   // addresses: string;

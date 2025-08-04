@@ -13,3 +13,4 @@ export * from "./booking.type";
 export * from "./custom-request.type"; // Asegurarse que este está si no estaba antes
 export * from "./shared.type";
 export * from "./booking-passengers.type";
+export * from "./payment.type";

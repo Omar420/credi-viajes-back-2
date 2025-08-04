@@ -24,15 +24,15 @@ const Client = sequelize.define(
         },
         secondSurname: {
             type: DataTypes.STRING(50),
-            allowNull: false,
+            allowNull: true,
         },
         countryPrefix: {
             type: DataTypes.STRING(4),
-            allowNull: false,
+            allowNull: true,
         },
         phoneNumber: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         birthdayDate: {
             type: DataTypes.DATE,
