@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { BookingService } from "@src/services";
-import { AuthModel, BookingModel } from "@src/models";
+import { AuthModel } from "@src/models";
 import { ERROR_MESSAGES, SUCCESS_MESSAGES, INFO_MESSAGES } from "@src/constants/messages.global";
 import { ISmartBookingRequest } from "@src/types/booking.type";
 import { CustomError } from "@src/utils/custom-exception.error";
@@ -11,13 +11,20 @@ const bookingService = new BookingService();
 
 export const createSmartBooking = async (req: AuthenticatedRequest, res: Response) => {
     const payload = req.body as ISmartBookingRequest;
-    const userId = req.uid;
 
-    if (!userId) {
-        return res.status(401).json({ message: ERROR_MESSAGES.ERROR_UNAUTHORIZED_ACCESS });
+    // Use email from payload to find the user, as requested.
+    const { email } = payload;
+    if (!email) {
+        return res.status(400).json({ message: "El email del cliente es requerido en el cuerpo de la solicitud." });
     }
 
     try {
+        const authUser = await AuthModel.findOne({ where: { email } });
+        if (!authUser) {
+            return res.status(404).json({ message: `Usuario con email ${email} no encontrado.` });
+        }
+        const userId = authUser.getDataValue('id');
+
         const result = await bookingService.createSmartBooking(payload, userId);
 
         return res.status(201).json({

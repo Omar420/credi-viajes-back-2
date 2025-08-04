@@ -10,25 +10,26 @@ import {
 } from "@src/controllers/booking.controller";
 import { validateFieldsMiddleware, validateJWTMiddleware } from "@src/middlewares";
 import { ERROR_MESSAGES } from "@src/constants/messages.global";
-import { PassengerType } from "@src/types";
 import { ROLES } from "@src/constants/config-global";
 
 const router = Router();
 
+// All booking routes are protected
 router.use(validateJWTMiddleware);
 
-router.post("/smart-booking", createSmartBooking);
+// Route to create a new smart booking
+router.post("/", createSmartBooking);
 
+// Route to get all bookings for the authenticated user
 router.get("/", getUserBookings);
 
+// Route for admins to get all bookings in the system
 router.get(
     "/all",
-    [
-        validateFieldsMiddleware
-    ],
     getAllBookings
 );
 
+// Route to get a specific booking by its ID
 router.get(
     "/:id",
     [
@@ -38,6 +39,7 @@ router.get(
     getBookingById
 );
 
+// Route to update the status of a booking
 router.patch(
     "/:id/status",
     [
@@ -55,6 +57,7 @@ router.patch(
     updateBookingStatus
 );
 
+// Route to cancel a booking
 router.put(
     "/:id/cancel",
     [

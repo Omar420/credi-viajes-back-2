@@ -14,33 +14,29 @@ import {
     AirItineraryInformationModel,
     InstallmentModel
 } from "@src/models";
-import { ISmartBookingRequest, IBookingAttributes, IBookingUpdatePayload, IBookingServiceCreatePayload, IKiuBookingResponse } from "@src/types/booking.type";
-import { IPassengerDataInput } from "@src/types/passenger.type";
-import { generateUniqueBookingReference } from "@src/utils/generate-booking-reference"; 
+import { ISmartBookingRequest, IBookingAttributes, IKiuBookingResponse } from "@src/types/booking.type";
 import { CustomError } from "@src/utils/custom-exception.error";
 import { KiuService } from "./kiu.service";
 import { parse, format } from 'date-fns';
 
 const kiuService = new KiuService();
 
-export class BookingService {
-
-    private validatePassengerLogic(passengers: IPassengerDataInput[]): string | null {
-        if (passengers.length === 0 || passengers.length > 9) {
-            return "Se requiere entre 1 y 9 pasajeros por reserva.";
-        }
-        const adults = passengers.filter(p => p.passengerType === 'adult');
-        const children = passengers.filter(p => p.passengerType === 'child');
-        const infants = passengers.filter(p => p.passengerType === 'infant');
-
-        if (adults.length === 0 && (children.length > 0 || infants.length > 0)) {
-            return "Se requiere al menos un pasajero adulto si viajan niños o infantes.";
-        }
-        if (infants.length > adults.length) {
-            return "Debe haber al menos un adulto por cada infante.";
-        }
-        return null;
+// Helper function for KIU document type transformation
+const getKiuDocumentTypes = (docTypeCode: string) => {
+    switch (docTypeCode) {
+        case 'V':
+            return { foid_type: 'ID', document_type: 'I' };
+        case 'E':
+            return { foid_type: 'NI', document_type: 'I' };
+        case 'P':
+            return { foid_type: 'PP', document_type: 'P' };
+        default:
+            // Default or error case
+            return { foid_type: 'ID', document_type: 'I' };
     }
+};
+
+export class BookingService {
 
     public async createSmartBooking(payload: ISmartBookingRequest, userId: string): Promise<IBookingAttributes> {
         let transaction: Transaction | undefined;
@@ -52,32 +48,33 @@ export class BookingService {
                 throw new CustomError("Usuario no autenticado o no encontrado.", 404);
             }
 
-            // Data Transformation for KIU Payload
+            // Data Transformation for KIU Payload & DB
             const countryIds = [
                 payload.fk_contact_country_id,
                 ...payload.passengers.map(p => p.fk_nationality_country_id),
                 ...payload.passengers.map(p => p.fk_issue_country_id)
             ];
             const genderIds = payload.passengers.map(p => p.fk_gender_id);
-            const docTypeIds = payload.passengers.map(p => p.document_type);
+            const docTypeCodes = payload.passengers.map(p => p.document_type);
 
             const [countries, genders, docTypes] = await Promise.all([
                 CountriesModel.findAll({ where: { id: [...new Set(countryIds)] }, transaction, attributes: ['id', 'code'] }),
                 GenderModel.findAll({ where: { id: [...new Set(genderIds)] }, transaction, attributes: ['id', 'code'] }),
-                DocumentTypesModel.findAll({ where: { id: [...new Set(docTypeIds)] }, transaction, attributes: ['id', 'code'] })
+                DocumentTypesModel.findAll({ where: { code: [...new Set(docTypeCodes)] }, transaction, attributes: ['id', 'code'] })
             ]);
 
             const countryMap = new Map(countries.map(c => [c.getDataValue('id'), c.getDataValue('code')]));
             const genderMap = new Map(genders.map(g => [g.getDataValue('id'), g.getDataValue('code')]));
-            const docTypeMap = new Map(docTypes.map(d => [d.getDataValue('id'), d.getDataValue('code')]));
+            const docTypeIdMap = new Map(docTypes.map(d => [d.getDataValue('code'), d.getDataValue('id')]));
 
             const kiuPassengers = payload.passengers.map(p => {
+                const kiuDocs = getKiuDocumentTypes(p.document_type);
                 const passenger = {
                     surname: p.surname,
                     name: p.name,
                     gender: genderMap.get(p.fk_gender_id),
-                    foid_type: p.foid_type,
-                    document_type: docTypeMap.get(p.document_type),
+                    foid_type: kiuDocs.foid_type, // Transformed
+                    document_type: kiuDocs.document_type, // Transformed
                     foid_id: p.foid_id,
                     date_of_birth: format(parse(p.date_of_birth, 'yyyy-MM-dd', new Date()), 'ddMMMyy').toUpperCase(),
                     passenger_type_code: p.passenger_type_code,
@@ -86,7 +83,7 @@ export class BookingService {
                     expiration_date: format(parse(p.expiration_date, 'yyyy-MM-dd', new Date()), 'ddMMMyy').toUpperCase(),
                     representative: p.representative,
                 };
-                if (p.passenger_type_code !== 'INFT') {
+                if (p.passenger_type_code.toUpperCase() !== 'INFT') {
                     delete passenger.representative;
                 }
                 return passenger;
@@ -139,6 +136,10 @@ export class BookingService {
 
             const passengerMap = new Map();
             const passengerCreationPromises = payload.passengers.map(async (p) => {
+                const docTypeId = docTypeIdMap.get(p.document_type);
+                if (!docTypeId) {
+                    throw new CustomError(`Tipo de documento inválido: ${p.document_type}`);
+                }
                 const newPassenger = await PassengersModel.create({
                     firstSurname: p.surname,
                     firstName: p.name,
@@ -146,7 +147,7 @@ export class BookingService {
                     dateOfBirth: p.date_of_birth,
                     fk_nationality_country_id: p.fk_nationality_country_id,
                     fk_issue_country_id: p.fk_issue_country_id,
-                    fk_doc_type_id: p.document_type,
+                    fk_doc_type_id: docTypeId, // Use mapped ID
                     documentNumber: p.foid_id,
                     passengerType: p.passenger_type_code.toLowerCase(),
                 }, { transaction });
@@ -325,7 +326,7 @@ export class BookingService {
             }
 
             await bookingInstance.update({
-                fk_status_id: cancelledStatusInstance.get('id') as string,
+                fk_status_id: cancelledStatusInstance.getDataValue('id') as string,
                 paymentSuccessful: false,
                 fk_updated_by_id: userId,
             }, { transaction });
