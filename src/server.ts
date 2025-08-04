@@ -8,6 +8,7 @@ import { execSync } from "child_process";
 import { getVersion } from "@src/constants/version";
 import { IPathRoutes } from "./types";
 import { AuthRoutes, ClientRoutes, UsersRoutes, UtilRoutes, ProductRoutes, BookingRoutes, KiuRoutes, PaymentRoutes, UserProfileRoutes, ClientProfileRoutes, PasswordRoutes } from "./routes";
+import { setupAssociations } from "./models/associations";
 
 export class Server {
   private app: Application;
@@ -71,6 +72,9 @@ export class Server {
       if (countPendingMigrations > 0) {
         return;
       }
+
+      // Setup associations after ensuring migrations are up to date
+      setupAssociations();
 
       const version = await getVersion();
       console.info('🚀 ~ Version', version);

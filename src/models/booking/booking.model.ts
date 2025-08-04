@@ -1,8 +1,5 @@
 import { DataTypes } from "sequelize";
 import sequelize from "@src/config/connection";
-import { CountriesModel, DestinationsModel } from "../shared";
-import { BookingStatusModel } from ".";
-import { AuthModel, UserModel } from "../users";
 
 const Booking = sequelize.define(
     "booking",
@@ -79,6 +76,18 @@ const Booking = sequelize.define(
             type: DataTypes.JSONB,
             allowNull: true,
         },
+        fk_status_id: { // Added this FK which was missing from the definition but present in relationships
+            type: DataTypes.UUID,
+            allowNull: false,
+        },
+        fk_origin_id: { // Added this FK
+            type: DataTypes.UUID,
+            allowNull: true,
+        },
+        fk_destination_id: { // Added this FK
+            type: DataTypes.UUID,
+            allowNull: true,
+        },
         fk_created_by_id: {
             type: DataTypes.UUID,
             allowNull: false,
@@ -100,67 +109,5 @@ const Booking = sequelize.define(
         tableName: "Bookings",
     }
 );
-
-BookingStatusModel.hasMany(Booking, {
-    foreignKey: 'fk_status_id',
-    sourceKey: 'id',
-    as: 'bookings'
-});
-Booking.belongsTo(BookingStatusModel, {
-    foreignKey: 'fk_status_id',
-    targetKey: 'id',
-    as: 'status'
-});
-
-Booking.belongsTo(DestinationsModel, {
-    foreignKey: 'fk_origin_id',
-    targetKey: 'id',
-    as: 'origin',
-});
-
-Booking.belongsTo(DestinationsModel, {
-    foreignKey: 'fk_destination_id',
-    targetKey: 'id',
-    as: 'destination',
-});
-
-Booking.belongsTo(AuthModel, {
-    foreignKey: 'fk_auth_id',
-    targetKey: 'id',
-    as: 'auth'
-});
-AuthModel.hasMany(Booking, {
-    foreignKey: 'fk_auth_id',
-    sourceKey: 'id',
-    as: 'bookings'
-});
-
-Booking.belongsTo(CountriesModel, {
-    foreignKey: 'fk_contact_country_id',
-    targetKey: 'id',
-    as: 'contactCountry'
-});
-
-Booking.belongsTo(UserModel, {
-    foreignKey: 'fk_created_by_id',
-    as: 'createdBy',
-    targetKey: 'id'
-});
-UserModel.hasMany(Booking, {
-    foreignKey: 'fk_created_by_id',
-    sourceKey: 'id',
-    as: 'createdBookings'
-});
-
-Booking.belongsTo(UserModel, {
-    foreignKey: 'fk_updated_by_id',
-    as: 'updatedBy',
-    targetKey: 'id'
-});
-UserModel.hasMany(Booking, {
-    foreignKey: 'fk_updated_by_id',
-    sourceKey: 'id',
-    as: 'updatedBookings'
-});
 
 export default Booking;
