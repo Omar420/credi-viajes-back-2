@@ -1,6 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '@src/config/connection';
-import Booking from './booking.model';
 
 class AirItineraryInformation extends Model {}
 
@@ -13,10 +12,6 @@ AirItineraryInformation.init({
   fk_booking_id: {
     type: DataTypes.UUID,
     allowNull: false,
-    references: {
-      model: 'Bookings',
-      key: 'id',
-    },
   },
   order: {
     type: DataTypes.INTEGER,
@@ -59,18 +54,6 @@ AirItineraryInformation.init({
   modelName: 'AirItineraryInformation',
   tableName: 'AirItineraryInformation',
   timestamps: true,
-});
-
-Booking.hasMany(AirItineraryInformation, {
-  foreignKey: 'fk_booking_id',
-  sourceKey: 'id',
-  as: 'airItineraryInformation'
-});
-
-AirItineraryInformation.belongsTo(Booking, {
-  foreignKey: 'fk_booking_id',
-  targetKey: 'id',
-  as: 'booking'
 });
 
 export default AirItineraryInformation;
