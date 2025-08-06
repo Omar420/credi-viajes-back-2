@@ -68,24 +68,46 @@ export class BookingService {
 
             const countryIds = [payload.fk_contact_country_id, ...payload.passengers.map(p => p.fk_nationality_country_id), ...payload.passengers.map(p => p.fk_issue_country_id)];
             const genderIds = payload.passengers.map(p => p.fk_gender_id);
-            const docTypeCodes = payload.passengers.map(p => p.document_type);
+            const docTypeIds = payload.passengers.map(p => p.document_type);
+            console.log('Gender IDs from payload:', JSON.stringify(genderIds, null, 2));
+            console.log('Document Type IDs from payload:', JSON.stringify(docTypeIds, null, 2));
 
             const [countries, genders, docTypes] = await Promise.all([
                 CountriesModel.findAll({ where: { id: [...new Set(countryIds)] }, transaction, attributes: ['id', 'code'] }),
                 GenderModel.findAll({ where: { id: [...new Set(genderIds)] }, transaction, attributes: ['id', 'code'] }),
-                DocumentTypesModel.findAll({ where: { code: [...new Set(docTypeCodes)] }, transaction, attributes: ['id', 'code'] })
+                DocumentTypesModel.findAll({ where: { id: [...new Set(docTypeIds)] }, transaction, attributes: ['id', 'code'] })
             ]);
 
             const countryMap = new Map(countries.map(c => [c.getDataValue('id'), c.getDataValue('code')]));
             const genderMap = new Map(genders.map(g => [g.getDataValue('id'), g.getDataValue('code')]));
-            const docTypeIdMap = new Map(docTypes.map(d => [d.getDataValue('code'), d.getDataValue('id')]));
+            const docTypeCodeMap = new Map(docTypes.map(d => [d.getDataValue('id'), d.getDataValue('code')]));
+            console.log('Gender Map (id -> code):', JSON.stringify(Array.from(genderMap.entries()), null, 2));
+            console.log('DocType Code Map (id -> code):', JSON.stringify(Array.from(docTypeCodeMap.entries()), null, 2));
 
             const kiuPassengers = payload.passengers.map(p => {
-                const kiuDocs = getKiuDocumentTypes(p.document_type);
+                console.log(`Procesando pasajero: ${p.name} ${p.surname}`);
+                const genderCode = genderMap.get(p.fk_gender_id);
+                if (!genderCode) {
+                    const errorMessage = `Código de género no encontrado para el ID: ${p.fk_gender_id}`;
+                    console.error(errorMessage);
+                    throw new CustomError(errorMessage, 400);
+                }
+
+                const docTypeCode = docTypeCodeMap.get(p.document_type);
+                if (!docTypeCode) {
+                    const errorMessage = `Código de tipo de documento no encontrado para el ID: ${p.document_type}`;
+                    console.error(errorMessage);
+                    throw new CustomError(errorMessage, 400);
+                }
+
+                console.log(`Gender ID: ${p.fk_gender_id} -> Code: ${genderCode}`);
+                console.log(`DocType ID: ${p.document_type} -> Code: ${docTypeCode}`);
+
+                const kiuDocs = getKiuDocumentTypes(docTypeCode);
                 const passenger = {
                     surname: p.surname,
                     name: p.name,
-                    gender: genderMap.get(p.fk_gender_id),
+                    gender: genderCode,
                     foid_type: kiuDocs.foid_type,
                     document_type: kiuDocs.document_type,
                     foid_id: p.foid_id,
@@ -97,6 +119,7 @@ export class BookingService {
                     representative: p.representative,
                 };
                 if (getKiuPassengerCode(p.passenger_type_code) !== 'INFT') delete passenger.representative;
+                console.log('Pasajero enviado a KIU:', JSON.stringify(passenger, null, 2));
                 return passenger;
             });
 
@@ -138,8 +161,10 @@ export class BookingService {
 
             const passengerMap = new Map();
             const createdPassengers = await Promise.all(payload.passengers.map(async (p) => {
-                const docTypeId = docTypeIdMap.get(p.document_type);
-                if (!docTypeId) throw new CustomError(`Tipo de documento inválido: ${p.document_type}`, 400);
+                const docTypeId = p.document_type;
+                if (!docTypeCodeMap.has(docTypeId)) {
+                    throw new CustomError(`Tipo de documento inválido: ${p.document_type}`, 400);
+                }
 
                 const dobForDb = format(parseDdmmyy(p.date_of_birth), 'yyyy-MM-dd');
 
